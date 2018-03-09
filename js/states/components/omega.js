@@ -12,9 +12,15 @@ class Omega extends GameObject{
 		this.immobile = true;
 		this.g = new ImageGraphics("omega", gOptions, this.position);
 		this.g.onClick(_ => {
-			alert("This is Omega. You should move Alpha here.");
+			field.showMessage("This is Omega. You should move Alpha here.");
 		});
-
+		this.field = field;
+	}
+	onEnter(o){
+		if(o.type == "alpha"){
+			o.disappear();
+			this.field.win();
+		}
 	}
 }
 

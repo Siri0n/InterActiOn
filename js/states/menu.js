@@ -1,19 +1,28 @@
-export default {
+class MenuState extends Phaser.State{
+	init(main){
+		this.main = main;
+	}
 	create(game){
 		game.stage.backgroundColor = "#4488AA";
-		var menu = new Menu(game, new Phaser.Rectangle(0, game.height/4, game.width, game.height/2));
-	},
-	preload(){
+		var menu = new Menu(game, new Phaser.Rectangle(0, game.height/4, game.width, game.height/2), [
+			{
+				text: this.main.data.nextLevel ? "Continue" : "Play",
+				cb: () => this.main.playAll()
+			},
+			{
+				text: "Select level",
+				cb: () => this.main.selectLevel()
+			},
+			{
+				text: "Level editor",
+				cb: () => alert("Not implemented yet")
+			}
+		]);
 	}
 }
-
-function Menu(game, rect){
+function Menu(game, rect, items){
 	var g = this.g = game.add.group();
-	var children = [
-		new MenuItem(game, g, "Test 1", _ => game.state.start("levelSelect")),
-		new MenuItem(game, g, "Test 2", _ => game.state.start("level")),
-		new MenuItem(game, g, "Test 3", _ => alert(3))
-	];
+	var children = items.map(data => new MenuItem(game, g, data.text, data.cb));
 	g.align(1, -1, rect.width, rect.height/children.length, Phaser.CENTER);
 	g.position.x = rect.x;
 	g.position.y = rect.y;
@@ -27,3 +36,4 @@ function MenuItem(game, group, text, cb){
 	g.events.onInputOut.add(_ => g.scale.x = g.scale.y = 1);
 	g.events.onInputDown.add(cb);
 }
+export default MenuState;

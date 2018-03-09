@@ -12,9 +12,9 @@ class Alpha extends GameObject{
 		this.g = new ImageGraphics("alpha", gOptions, this.position);
 		this.g.onClick(_ => {
 			//alert(this.momentum);
-			alert("This is Alpha. You should move it to Omega, but clicking on it won't help you.");
+			field.showMessage("This is Alpha. You should move it to Omega, but clicking on it won't help you.");
 		});
-
+		this.field = field;
 	}
 }
 

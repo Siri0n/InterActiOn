@@ -18,6 +18,7 @@ class Plus extends GameObject{
 			});
 			field.process();
 		});
+		this.field = field;
 	}
 }
 

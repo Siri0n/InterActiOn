@@ -1,24 +1,31 @@
-import levels from "resources/levels";
 import Alpha from "./components/alpha";
 import Omega from "./components/omega";
 import Plus from "./components/plus";
+import MsgBox from "./components/msgBox";
 
-export default {
+class LevelState extends Phaser.State{
+	init(main, levelData, cb){
+		this.main = main;
+		this.levelData = levelData;
+		this.cb = cb;
+	}
 	create(game){
-		var field = new Field(game, null, null, levels[0]);
-	},
+		var field = new Field(game, null, null, this.levelData, this.cb);
+	}
 	preload(game){
 		game.load.image("tile", "resources/tile.png");
 		game.load.image("alpha", "resources/alpha.png");
 		game.load.image("omega", "resources/omega.png");
 		game.load.image("plus", "resources/plus.png");
+		game.load.image("msg-bg", "resources/msg-bg.png");
 	}
+
 }
 
 const s = 32;
 const Point = Phaser.Point;
 
-function Field(game, parentGroup, rect, data){
+function Field(game, parentGroup, rect, data, cb){
 	const self = this;
 
 	const UP = this.UP = new Point(0, 1);
@@ -30,7 +37,6 @@ function Field(game, parentGroup, rect, data){
 
 	const DIRECTIONS = [this.UP, this.RIGHT, this.DOWN, this.LEFT];
 	const IS_SOLID = o => o.body == "solid";
-
 
 	parentGroup = parentGroup || game.world;
 	rect = rect || game.world.bounds;
@@ -49,6 +55,8 @@ function Field(game, parentGroup, rect, data){
 
 	var objectsGroup = game.add.group(g);
 	var objects = [];
+	var removedObjects = [];
+	var winFlag = false;
 
 	data.objects.forEach(o => {
 		var O = objectConstructors[o.type]
@@ -64,6 +72,21 @@ function Field(game, parentGroup, rect, data){
 			)
 		);
 	})
+
+	const msgBox = new MsgBox(
+		game, 
+		parentGroup, 
+		new Phaser.Rectangle(
+			rect.x + rect.width/4,
+			rect.y + rect.height/4,
+			rect.width/2,
+			rect.height/2
+		)
+	);
+
+	this.showMessage = function(text){
+		return msgBox.show(text);
+	}
 
 	this.objectsAt = function(p){
 		if(p.x < 0 || p.y < 0 || p.x >= data.width || p.y >= data.height){
@@ -94,6 +117,7 @@ function Field(game, parentGroup, rect, data){
 			return false;
 		}
 		movingObjects.forEach(o => o.plan());
+		var movedObjects = [];
 		while(movingObjects.length){
 			let stack = [movingObjects[0]];
 			let canMove = false;
@@ -116,12 +140,26 @@ function Field(game, parentGroup, rect, data){
 				stack.unshift(o);
 			}
 			if(canMove){
-				stack.forEach(o => o.move());
+				stack.forEach(o => {
+					o.move();
+					movedObjects.push(o);
+
+				});
 			}else{
 				stack.forEach(o => o.bump());
 			}
 			movingObjects = movingObjects.filter(o => !stack.includes(o));
 		}
+		movedObjects.forEach(o => {
+			var collidingObjects = self.objectsAt(o.position);
+			var solidObjects = collidingObjects.filter(IS_SOLID);
+			if(solidObjects.length > 1){
+				throw new Error("Unhandled collision");
+			}
+			collidingObjects.forEach(o2 => {
+				o2.onEnter && o2.onEnter(o);
+			});
+		});
 		return true;
 	}
 
@@ -129,8 +167,23 @@ function Field(game, parentGroup, rect, data){
 		objectsGroup.ignoreChildInput = true;
 		var i = 42;
 		while(step() && i--){}
-		await Promise.all(objects.map(o => o.play()));
+		await Promise.all(objects.concat(removedObjects).map(o => o.play()));
+		removedObjects.forEach(o => o.destroy());
+		removedObjects = [];
 		objectsGroup.ignoreChildInput = false;
+		if(winFlag){
+			await this.showMessage("You win!");
+			cb();
+		}
+	}
+
+	this.remove = function(o){
+		objects = objects.filter(o2 => o2 != o);
+		removedObjects.push(o);
+	}
+
+	this.win = function(){
+		winFlag = true;
 	}
 }
 
@@ -144,3 +197,5 @@ function Tile(game, group, S, {x, y}){
 	var img = game.add.image(x*S, y*S, "tile", null, group);
 	img.width = img.height = S;
 }
+
+export default LevelState;

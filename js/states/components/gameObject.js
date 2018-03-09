@@ -24,6 +24,13 @@ class GameObject{
 		this.nextPosition = null;
 		this.momentum = Point.subtract(this.momentum, push);
 	}
+	disappear(){
+		this.g.fade();
+		this.field.remove(this);
+	}
+	destroy(){
+		this.g.destroy();
+	}
 	async play(){
 		await this.g.play(); 
 	}

@@ -2826,6 +2826,17 @@ var GameObject = function () {
 			this.momentum = Point.subtract(this.momentum, push);
 		}
 	}, {
+		key: "disappear",
+		value: function disappear() {
+			this.g.fade();
+			this.field.remove(this);
+		}
+	}, {
+		key: "destroy",
+		value: function destroy() {
+			this.g.destroy();
+		}
+	}, {
 		key: "play",
 		value: function () {
 			var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
@@ -2929,6 +2940,18 @@ var ImageGraphics = function () {
 			});
 		}
 	}, {
+		key: "fade",
+		value: function fade() {
+			this.commands.push({
+				type: "fade"
+			});
+		}
+	}, {
+		key: "destroy",
+		value: function destroy() {
+			this.g.destroy();
+		}
+	}, {
 		key: "play",
 		value: function () {
 			var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
@@ -2988,6 +3011,12 @@ var ImageGraphics = function () {
 			} else if (command.type == "wait") {
 				return new Promise(function (resolve, reject) {
 					_this.game.add.tween(_this.g).to({}, TIME_UNIT, Phaser.Easing.Linear.None, true).onComplete.addOnce(resolve);
+				});
+			} else if (command.type == "fade") {
+				return new Promise(function (resolve, reject) {
+					_this.game.add.tween(_this.g).to({
+						alpha: 0
+					}, TIME_UNIT, Phaser.Easing.Linear.None, true).onComplete.addOnce(resolve);
 				});
 			}
 		}
@@ -117525,6 +117554,8 @@ function Field(game, parentGroup, rect, data) {
 
 	var objectsGroup = game.add.group(g);
 	var objects = [];
+	var removedObjects = [];
+	var winFlag = false;
 
 	data.objects.forEach(function (o) {
 		var O = objectConstructors[o.type];
@@ -117565,6 +117596,8 @@ function Field(game, parentGroup, rect, data) {
 	};
 
 	function step(movingObjects) {
+		var _this = this;
+
 		var movingObjects = objects.filter(function (o) {
 			return o.moving();
 		});
@@ -117574,6 +117607,7 @@ function Field(game, parentGroup, rect, data) {
 		movingObjects.forEach(function (o) {
 			return o.plan();
 		});
+		var movedObjects = [];
 
 		var _loop = function _loop() {
 			var stack = [movingObjects[0]];
@@ -117598,7 +117632,8 @@ function Field(game, parentGroup, rect, data) {
 			}
 			if (canMove) {
 				stack.forEach(function (o) {
-					return o.move();
+					o.move();
+					movedObjects.push(o);
 				});
 			} else {
 				stack.forEach(function (o) {
@@ -117613,6 +117648,16 @@ function Field(game, parentGroup, rect, data) {
 		while (movingObjects.length) {
 			_loop();
 		}
+		movedObjects.forEach(function (o) {
+			var collidingObjects = _this.objectsAt(o.position);
+			var solidObjects = collidingObjects.filter(IS_SOLID);
+			if (solidObjects.length > 1) {
+				throw new Error("Unhandled collision");
+			}
+			collidingObjects.forEach(function (o2) {
+				o2.onEnter && o2.onEnter(o1);
+			});
+		});
 		return true;
 	}
 
@@ -117626,21 +117671,32 @@ function Field(game, parentGroup, rect, data) {
 						i = 42;
 
 						while (step() && i--) {}
-						_context.next = 5;
-						return Promise.all(objects.map(function (o) {
-							return o.play();
-						}));
-
-					case 5:
+						//await Promise.all(objects.concat(removedObjects).map(o => o.play()));
+						removedObjects.forEach(function (o) {
+							return o.destroy();
+						});
+						removedObjects = [];
 						objectsGroup.ignoreChildInput = false;
+						if (winFlag) {
+							alert("You win!");
+						}
 
-					case 6:
+					case 7:
 					case "end":
 						return _context.stop();
 				}
 			}
 		}, _callee, this);
 	}));
+
+	this.remove = function (o) {
+		objects = objects.filter(function (o2) {
+			return o2 != o;
+		});
+		removedObjects.push(o);
+	};
+
+	this.win = function () {};
 }
 
 var objectConstructors = {
@@ -117777,6 +117833,8 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _gameObject = __webpack_require__(91);
 
 var _gameObject2 = _interopRequireDefault(_gameObject);
@@ -117813,9 +117871,19 @@ var Omega = function (_GameObject) {
 		_this.g.onClick(function (_) {
 			alert("This is Omega. You should move Alpha here.");
 		});
-
+		_this.field = field;
 		return _this;
 	}
+
+	_createClass(Omega, [{
+		key: "onEnter",
+		value: function onEnter(o) {
+			if (o.type == "alpha") {
+				o.disappear();
+				this.field.win();
+			}
+		}
+	}]);
 
 	return Omega;
 }(_gameObject2.default);
@@ -117883,3 +117951,4 @@ exports.default = Plus;
 
 /***/ })
 /******/ ]);
+//# sourceMappingURL=bundle.js.map

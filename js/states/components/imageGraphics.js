@@ -5,13 +5,13 @@ function removeConsequentBumps(commands){
 		if(c.type == "bump" && p && (p.type == "bump" || p.type == "wait")){
 			c.type = "wait";
 		}
-		console.log(commands);
 	}
 }
 
 const TIME_UNIT = 500;
 
 class ImageGraphics{
+
 	constructor(key, {game, group, s}, {x, y}){
 		this.s = s;
 		this.game = game;
@@ -21,9 +21,11 @@ class ImageGraphics{
 		this.g.inputEnabled = true;
 		this.commands = [];
 	}
+
 	onClick(f){
 		this.g.events.onInputDown.add(f);
 	}
+
 	move(p){
 		this.commands.push({
 			type: "move",
@@ -31,14 +33,25 @@ class ImageGraphics{
 		});
 		//this.g.position.add(p.x*this.s, p.y*this.s);
 	}
+
 	bump(p){
 		this.commands.push({
 			type: "bump",
 			shift: p
 		});
 	}
+
+	fade(){
+		this.commands.push({
+			type: "fade"
+		});
+	}
+
+	destroy(){
+		this.g.destroy();
+	}
+
 	async play(){
-		console.log("play");
 		removeConsequentBumps(this.commands);
 		while(this.commands.length){
 			await this.execute(this.commands.shift());
@@ -78,6 +91,19 @@ class ImageGraphics{
 				this.game.add.tween(this.g)
 					.to(
 						{},
+						TIME_UNIT,
+						Phaser.Easing.Linear.None,
+						true
+					)
+					.onComplete.addOnce(resolve);
+			})
+		}else if(command.type == "fade"){
+			return new Promise((resolve, reject) => {
+				this.game.add.tween(this.g)
+					.to(
+						{
+							alpha: 0 
+						},
 						TIME_UNIT,
 						Phaser.Easing.Linear.None,
 						true

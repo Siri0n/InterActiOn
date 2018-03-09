@@ -2892,7 +2892,6 @@ function removeConsequentBumps(commands) {
 		if (c.type == "bump" && p && (p.type == "bump" || p.type == "wait")) {
 			c.type = "wait";
 		}
-		console.log(commands);
 	}
 }
 
@@ -2959,23 +2958,22 @@ var ImageGraphics = function () {
 					while (1) {
 						switch (_context.prev = _context.next) {
 							case 0:
-								console.log("play");
 								removeConsequentBumps(this.commands);
 
-							case 2:
+							case 1:
 								if (!this.commands.length) {
-									_context.next = 7;
+									_context.next = 6;
 									break;
 								}
 
-								_context.next = 5;
+								_context.next = 4;
 								return this.execute(this.commands.shift());
 
-							case 5:
-								_context.next = 2;
+							case 4:
+								_context.next = 1;
 								break;
 
-							case 7:
+							case 6:
 							case "end":
 								return _context.stop();
 						}
@@ -9291,13 +9289,13 @@ var _phaser = __webpack_require__(335);
 
 var _phaser2 = _interopRequireDefault(_phaser);
 
-var _game = __webpack_require__(338);
+var _main = __webpack_require__(338);
 
-var _game2 = _interopRequireDefault(_game);
+var _main2 = _interopRequireDefault(_main);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var game = new _game2.default();
+var main = new _main2.default();
 
 /***/ }),
 /* 331 */
@@ -117392,26 +117390,75 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-exports.default = function () {
-	var game = new Phaser.Game(800, 600, Phaser.AUTO, '');
-	game.state.add("menu", _menu2.default);
-	game.state.add("levelSelect", _levelSelect2.default);
-	game.state.add("level", _level2.default, true);
-};
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _menu = __webpack_require__(339);
+var _game = __webpack_require__(339);
 
-var _menu2 = _interopRequireDefault(_menu);
+var _game2 = _interopRequireDefault(_game);
 
-var _levelSelect = __webpack_require__(340);
+var _levels = __webpack_require__(347);
 
-var _levelSelect2 = _interopRequireDefault(_levelSelect);
-
-var _level = __webpack_require__(341);
-
-var _level2 = _interopRequireDefault(_level);
+var _levels2 = _interopRequireDefault(_levels);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Main = function () {
+	function Main() {
+		_classCallCheck(this, Main);
+
+		this.game = (0, _game2.default)();
+		this.levels = _levels2.default;
+		this.data = { nextLevel: 0 };
+		this.goToMenu();
+	}
+
+	_createClass(Main, [{
+		key: "goToMenu",
+		value: function goToMenu() {
+			this.game.state.start("menu", true, false, this);
+		}
+	}, {
+		key: "play",
+		value: function play(i, cb) {
+			this.game.state.start("level", true, false, this, _levels2.default[i], cb);
+		}
+	}, {
+		key: "playOne",
+		value: function playOne(i) {
+			var _this = this;
+
+			this.play(i, function () {
+				return _this.goToMenu();
+			});
+		}
+	}, {
+		key: "playAll",
+		value: function playAll() {
+			var _this2 = this;
+
+			var i = this.data.nextLevel;
+			if (_levels2.default[i]) {
+				this.play(i, function () {
+					_this2.data.nextLevel = i + 1;
+					_this2.playAll();
+				});
+			} else {
+				this.goToMenu();
+			}
+		}
+	}, {
+		key: "selectLevel",
+		value: function selectLevel() {
+			this.game.state.start("levelSelect", true, false, this, _levels2.default);
+		}
+	}]);
+
+	return Main;
+}();
+
+exports.default = Main;
 
 /***/ }),
 /* 339 */
@@ -117423,24 +117470,95 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.default = {
-	create: function create(game) {
-		game.stage.backgroundColor = "#4488AA";
-		var menu = new Menu(game, new Phaser.Rectangle(0, game.height / 4, game.width, game.height / 2));
-	},
-	preload: function preload() {}
+
+exports.default = function () {
+	var game = new Phaser.Game(800, 600, Phaser.AUTO, '');
+	game.state.add("menu", _menu2.default);
+	game.state.add("levelSelect", _levelSelect2.default);
+	game.state.add("level", _level2.default);
+	return game;
 };
 
+var _menu = __webpack_require__(340);
 
-function Menu(game, rect) {
+var _menu2 = _interopRequireDefault(_menu);
+
+var _levelSelect = __webpack_require__(341);
+
+var _levelSelect2 = _interopRequireDefault(_levelSelect);
+
+var _level = __webpack_require__(342);
+
+var _level2 = _interopRequireDefault(_level);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/***/ }),
+/* 340 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var MenuState = function (_Phaser$State) {
+	_inherits(MenuState, _Phaser$State);
+
+	function MenuState() {
+		_classCallCheck(this, MenuState);
+
+		return _possibleConstructorReturn(this, (MenuState.__proto__ || Object.getPrototypeOf(MenuState)).apply(this, arguments));
+	}
+
+	_createClass(MenuState, [{
+		key: "init",
+		value: function init(main) {
+			this.main = main;
+		}
+	}, {
+		key: "create",
+		value: function create(game) {
+			var _this2 = this;
+
+			game.stage.backgroundColor = "#4488AA";
+			var menu = new Menu(game, new Phaser.Rectangle(0, game.height / 4, game.width, game.height / 2), [{
+				text: this.main.data.nextLevel ? "Continue" : "Play",
+				cb: function cb() {
+					return _this2.main.playAll();
+				}
+			}, {
+				text: "Select level",
+				cb: function cb() {
+					return _this2.main.selectLevel();
+				}
+			}, {
+				text: "Level editor",
+				cb: function cb() {
+					return alert("Not implemented yet");
+				}
+			}]);
+		}
+	}]);
+
+	return MenuState;
+}(Phaser.State);
+
+function Menu(game, rect, items) {
 	var g = this.g = game.add.group();
-	var children = [new MenuItem(game, g, "Test 1", function (_) {
-		return game.state.start("levelSelect");
-	}), new MenuItem(game, g, "Test 2", function (_) {
-		return game.state.start("level");
-	}), new MenuItem(game, g, "Test 3", function (_) {
-		return alert(3);
-	})];
+	var children = items.map(function (data) {
+		return new MenuItem(game, g, data.text, data.cb);
+	});
 	g.align(1, -1, rect.width, rect.height / children.length, Phaser.CENTER);
 	g.position.x = rect.x;
 	g.position.y = rect.y;
@@ -117458,9 +117576,10 @@ function MenuItem(game, group, text, cb) {
 	});
 	g.events.onInputDown.add(cb);
 }
+exports.default = MenuState;
 
 /***/ }),
-/* 340 */
+/* 341 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -117477,7 +117596,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 341 */
+/* 342 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -117487,9 +117606,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _levels = __webpack_require__(342);
-
-var _levels2 = _interopRequireDefault(_levels);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _alpha = __webpack_require__(343);
 
@@ -117503,27 +117620,59 @@ var _plus = __webpack_require__(345);
 
 var _plus2 = _interopRequireDefault(_plus);
 
+var _msgBox = __webpack_require__(346);
+
+var _msgBox2 = _interopRequireDefault(_msgBox);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
-exports.default = {
-	create: function create(game) {
-		var field = new Field(game, null, null, _levels2.default[0]);
-	},
-	preload: function preload(game) {
-		game.load.image("tile", "resources/tile.png");
-		game.load.image("alpha", "resources/alpha.png");
-		game.load.image("omega", "resources/omega.png");
-		game.load.image("plus", "resources/plus.png");
-	}
-};
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var LevelState = function (_Phaser$State) {
+	_inherits(LevelState, _Phaser$State);
+
+	function LevelState() {
+		_classCallCheck(this, LevelState);
+
+		return _possibleConstructorReturn(this, (LevelState.__proto__ || Object.getPrototypeOf(LevelState)).apply(this, arguments));
+	}
+
+	_createClass(LevelState, [{
+		key: "init",
+		value: function init(main, levelData, cb) {
+			this.main = main;
+			this.levelData = levelData;
+			this.cb = cb;
+		}
+	}, {
+		key: "create",
+		value: function create(game) {
+			var field = new Field(game, null, null, this.levelData, this.cb);
+		}
+	}, {
+		key: "preload",
+		value: function preload(game) {
+			game.load.image("tile", "resources/tile.png");
+			game.load.image("alpha", "resources/alpha.png");
+			game.load.image("omega", "resources/omega.png");
+			game.load.image("plus", "resources/plus.png");
+			game.load.image("msg-bg", "resources/msg-bg.png");
+		}
+	}]);
+
+	return LevelState;
+}(Phaser.State);
 
 var s = 32;
 var Point = Phaser.Point;
 
-function Field(game, parentGroup, rect, data) {
+function Field(game, parentGroup, rect, data, cb) {
 	var self = this;
 
 	var UP = this.UP = new Point(0, 1);
@@ -117566,6 +117715,12 @@ function Field(game, parentGroup, rect, data) {
 		}, o, self));
 	});
 
+	var msgBox = new _msgBox2.default(game, parentGroup, new Phaser.Rectangle(rect.x + rect.width / 4, rect.y + rect.height / 4, rect.width / 2, rect.height / 2));
+
+	this.showMessage = function (text) {
+		return msgBox.show(text);
+	};
+
 	this.objectsAt = function (p) {
 		if (p.x < 0 || p.y < 0 || p.x >= data.width || p.y >= data.height) {
 			return self.VOID;
@@ -117596,8 +117751,6 @@ function Field(game, parentGroup, rect, data) {
 	};
 
 	function step(movingObjects) {
-		var _this = this;
-
 		var movingObjects = objects.filter(function (o) {
 			return o.moving();
 		});
@@ -117649,13 +117802,13 @@ function Field(game, parentGroup, rect, data) {
 			_loop();
 		}
 		movedObjects.forEach(function (o) {
-			var collidingObjects = _this.objectsAt(o.position);
+			var collidingObjects = self.objectsAt(o.position);
 			var solidObjects = collidingObjects.filter(IS_SOLID);
 			if (solidObjects.length > 1) {
 				throw new Error("Unhandled collision");
 			}
 			collidingObjects.forEach(function (o2) {
-				o2.onEnter && o2.onEnter(o1);
+				o2.onEnter && o2.onEnter(o);
 			});
 		});
 		return true;
@@ -117671,17 +117824,30 @@ function Field(game, parentGroup, rect, data) {
 						i = 42;
 
 						while (step() && i--) {}
-						//await Promise.all(objects.concat(removedObjects).map(o => o.play()));
+						_context.next = 5;
+						return Promise.all(objects.concat(removedObjects).map(function (o) {
+							return o.play();
+						}));
+
+					case 5:
 						removedObjects.forEach(function (o) {
 							return o.destroy();
 						});
 						removedObjects = [];
 						objectsGroup.ignoreChildInput = false;
-						if (winFlag) {
-							alert("You win!");
+
+						if (!winFlag) {
+							_context.next = 12;
+							break;
 						}
 
-					case 7:
+						_context.next = 11;
+						return this.showMessage("You win!");
+
+					case 11:
+						cb();
+
+					case 12:
 					case "end":
 						return _context.stop();
 				}
@@ -117696,7 +117862,9 @@ function Field(game, parentGroup, rect, data) {
 		removedObjects.push(o);
 	};
 
-	this.win = function () {};
+	this.win = function () {
+		winFlag = true;
+	};
 }
 
 var objectConstructors = {
@@ -117713,58 +117881,7 @@ function Tile(game, group, S, _ref2) {
 	img.width = img.height = S;
 }
 
-/***/ }),
-/* 342 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.default = [{
-	name: "Level 1",
-	height: 10,
-	width: 10,
-	objects: [{
-		type: "alpha",
-		position: { x: 1, y: 0 }
-	}, {
-		type: "omega",
-		position: { x: 4, y: 0 }
-	}, {
-		type: "plus",
-		position: { x: 0, y: 0 }
-	}, {
-		type: "plus",
-		position: { x: 5, y: 5 }
-	}, {
-		type: "plus",
-		position: { x: 6, y: 5 }
-	}, {
-		type: "plus",
-		position: { x: 7, y: 5 }
-	}, {
-		type: "plus",
-		position: { x: 5, y: 6 }
-	}, {
-		type: "plus",
-		position: { x: 6, y: 6 }
-	}, {
-		type: "plus",
-		position: { x: 7, y: 6 }
-	}, {
-		type: "plus",
-		position: { x: 5, y: 7 }
-	}, {
-		type: "plus",
-		position: { x: 6, y: 7 }
-	}, {
-		type: "plus",
-		position: { x: 7, y: 7 }
-	}]
-}];
+exports.default = LevelState;
 
 /***/ }),
 /* 343 */
@@ -117811,9 +117928,9 @@ var Alpha = function (_GameObject) {
 		_this.g = new _imageGraphics2.default("alpha", gOptions, _this.position);
 		_this.g.onClick(function (_) {
 			//alert(this.momentum);
-			alert("This is Alpha. You should move it to Omega, but clicking on it won't help you.");
+			field.showMessage("This is Alpha. You should move it to Omega, but clicking on it won't help you.");
 		});
-
+		_this.field = field;
 		return _this;
 	}
 
@@ -117869,7 +117986,7 @@ var Omega = function (_GameObject) {
 		_this.immobile = true;
 		_this.g = new _imageGraphics2.default("omega", gOptions, _this.position);
 		_this.g.onClick(function (_) {
-			alert("This is Omega. You should move Alpha here.");
+			field.showMessage("This is Omega. You should move Alpha here.");
 		});
 		_this.field = field;
 		return _this;
@@ -117941,6 +118058,7 @@ var Plus = function (_GameObject) {
 			});
 			field.process();
 		});
+		_this.field = field;
 		return _this;
 	}
 
@@ -117948,6 +118066,135 @@ var Plus = function (_GameObject) {
 }(_gameObject2.default);
 
 exports.default = Plus;
+
+/***/ }),
+/* 346 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MsgBox = function () {
+	function MsgBox(game, group, rect) {
+		var _this = this;
+
+		_classCallCheck(this, MsgBox);
+
+		this.g = game.add.group(group);
+		this.g.x = rect.x;
+		this.g.y = rect.y;
+		this.bg = game.add.tileSprite(0, 0, rect.width, rect.height, "msg-bg", null, this.g);
+		this.t = game.add.text(0, 0, "", {}, this.g);
+		this.t.wordWrap = true;
+		this.t.wordWrapWidth = rect.width * 0.9;
+		this.bg.inputEnabled = true;
+		this.bg.events.onInputDown.add(function () {
+			return _this.hide();
+		});
+		this.g.visible = false;
+	}
+
+	_createClass(MsgBox, [{
+		key: "show",
+		value: function show(text) {
+			var _this2 = this;
+
+			return new Promise(function (resolve, reject) {
+				_this2.resolve = resolve;
+				_this2.g.visible = true;
+				_this2.t.text = text;
+				_this2.t.alignIn(_this2.bg, Phaser.CENTER);
+			});
+		}
+	}, {
+		key: "hide",
+		value: function hide() {
+			if (this.resolve) {
+				this.resolve();
+				this.resolve = null;
+			}
+			this.g.visible = false;
+		}
+	}]);
+
+	return MsgBox;
+}();
+
+exports.default = MsgBox;
+
+/***/ }),
+/* 347 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.default = [{
+	name: "Level 1",
+	height: 1,
+	width: 5,
+	objects: [{
+		type: "alpha",
+		position: { x: 1, y: 0 }
+	}, {
+		type: "omega",
+		position: { x: 4, y: 0 }
+	}, {
+		type: "plus",
+		position: { x: 0, y: 0 }
+	}]
+}, {
+	name: "Level 2",
+	height: 4,
+	width: 4,
+	objects: [{
+		type: "alpha",
+		position: { x: 1, y: 2 }
+	}, {
+		type: "omega",
+		position: { x: 3, y: 0 }
+	}, {
+		type: "plus",
+		position: { x: 1, y: 3 }
+	}, {
+		type: "plus",
+		position: { x: 0, y: 0 }
+	}]
+}, {
+	name: "Level 3",
+	height: 5,
+	width: 5,
+	objects: [{
+		type: "alpha",
+		position: { x: 1, y: 3 }
+	}, {
+		type: "omega",
+		position: { x: 4, y: 0 }
+	}, {
+		type: "plus",
+		position: { x: 1, y: 4 }
+	}, {
+		type: "plus",
+		position: { x: 1, y: 1 }
+	}, {
+		type: "plus",
+		position: { x: 2, y: 4 }
+	}, {
+		type: "plus",
+		position: { x: 0, y: 2 }
+	}]
+}];
 
 /***/ })
 /******/ ]);

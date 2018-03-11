@@ -53,7 +53,8 @@ function Field(game, parentGroup, rect, data, cb){
 	g.alignIn(rect, Phaser.CENTER);
 
 
-	var objectsGroup = game.add.group(g);
+	var floorGroup = game.add.group(g);
+	var solidGroup = game.add.group(g);
 	var objects = [];
 	var removedObjects = [];
 	var winFlag = false;
@@ -64,7 +65,7 @@ function Field(game, parentGroup, rect, data, cb){
 			new O(
 				{
 					game, 
-					group:objectsGroup,
+					group: O.floor ? floorGroup : solidGroup,
 					s
 				}, 
 				o,
@@ -164,13 +165,13 @@ function Field(game, parentGroup, rect, data, cb){
 	}
 
 	this.process = async function(){
-		objectsGroup.ignoreChildInput = true;
+		g.ignoreChildInput = true;
 		var i = 42;
 		while(step() && i--){}
 		await Promise.all(objects.concat(removedObjects).map(o => o.play()));
 		removedObjects.forEach(o => o.destroy());
 		removedObjects = [];
-		objectsGroup.ignoreChildInput = false;
+		g.ignoreChildInput = false;
 		if(winFlag){
 			await this.showMessage("You win!");
 			cb();

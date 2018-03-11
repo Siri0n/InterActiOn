@@ -29,6 +29,9 @@ class Main{
 		}
 	}
 	selectLevel(){
+		//this.game.state.start("levelSelect", true, false, this, this.levels);
+		//test
+		var levels = [...Array(88).keys()].map(i => ({name: "level " + (i + 1)}));
 		this.game.state.start("levelSelect", true, false, this, levels);
 	}
 

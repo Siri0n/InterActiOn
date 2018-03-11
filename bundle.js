@@ -117402,6 +117402,8 @@ var _levels2 = _interopRequireDefault(_levels);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Main = function () {
@@ -117451,7 +117453,12 @@ var Main = function () {
 	}, {
 		key: "selectLevel",
 		value: function selectLevel() {
-			this.game.state.start("levelSelect", true, false, this, _levels2.default);
+			//this.game.state.start("levelSelect", true, false, this, this.levels);
+			//test
+			var levels = [].concat(_toConsumableArray(Array(88).keys())).map(function (i) {
+				return { name: "level " + (i + 1) };
+			});
+			this.game.state.start("levelSelect", true, false, this, levels);
 		}
 	}]);
 
@@ -117588,11 +117595,139 @@ exports.default = MenuState;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.default = {
-	create: function create(game) {
-		game.stage.backgroundColor = "#012345";
-	},
-	preload: function preload() {}
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var LevelSelectState = function (_Phaser$State) {
+	_inherits(LevelSelectState, _Phaser$State);
+
+	function LevelSelectState() {
+		_classCallCheck(this, LevelSelectState);
+
+		return _possibleConstructorReturn(this, (LevelSelectState.__proto__ || Object.getPrototypeOf(LevelSelectState)).apply(this, arguments));
+	}
+
+	_createClass(LevelSelectState, [{
+		key: "init",
+		value: function init(main, levels) {
+			this.main = main;
+			this.levels = levels;
+		}
+	}, {
+		key: "create",
+		value: function create(game) {
+			var _this2 = this;
+
+			var levelSelect = new LevelSelect(game, this.levels, function (i) {
+				return _this2.main.playOne(i);
+			});
+		}
+	}, {
+		key: "preload",
+		value: function preload(game) {
+			game.load.spritesheet("wide-arrow", "resources/wide-arrow.png", 512, 128);
+			game.load.image("msg-bg", "resources/msg-bg.png");
+		}
+	}]);
+
+	return LevelSelectState;
+}(Phaser.State);
+
+exports.default = LevelSelectState;
+
+var LevelSelect = function () {
+	function LevelSelect(game, levels, cb) {
+		_classCallCheck(this, LevelSelect);
+
+		//game.world.bounds.width = game.world.bounds.height = 10000;
+		game.camera.bounds = null;
+
+		var supergroup = game.add.group();
+		var groups = [];
+		var buttons = [];
+		levels.forEach(function (data, i) {
+			var groupIndex = Math.floor(i / 9);
+			if (!groups[groupIndex]) {
+				groups[groupIndex] = game.add.group(supergroup);
+			}
+			var button = new LevelSelectButton(game, groups[groupIndex], data, 100, 100, i, cb);
+			buttons.push(button);
+		});
+		groups.forEach(function (g) {
+			return g.align(3, 3, 150, 150, Phaser.CENTER);
+		});
+		supergroup.align(-1, 1, game.camera.width, game.camera.height, Phaser.CENTER);
+
+		var buttonRight = this.buttonRight = game.add.button(0, 0, "wide-arrow", this.scrollRight, this, 1, 0, 2, 0);
+		buttonRight.angle = 270;
+		buttonRight.fixedToCamera = true;
+		buttonRight.anchor.x = buttonRight.anchor.y = 0.5;
+		buttonRight.cameraOffset.x = game.camera.width - buttonRight.height / 2;
+		buttonRight.cameraOffset.y = game.camera.height / 2;
+
+		var buttonLeft = this.buttonLeft = game.add.button(0, 0, "wide-arrow", this.scrollLeft, this, 1, 0, 2, 0);
+		buttonLeft.angle = 90;
+		buttonLeft.fixedToCamera = true;
+		buttonLeft.anchor.x = buttonLeft.anchor.y = 0.5;
+		buttonLeft.cameraOffset.x = buttonLeft.height / 2;
+		buttonLeft.cameraOffset.y = game.camera.height / 2;
+
+		this.currentScreen = 0;
+		this.maxScreen = Math.floor(levels.length / 9);
+		this.game = game;
+		this.updateButtons();
+	}
+
+	_createClass(LevelSelect, [{
+		key: "scrollRight",
+		value: function scrollRight() {
+			this.currentScreen++;
+			this.scroll();
+		}
+	}, {
+		key: "scrollLeft",
+		value: function scrollLeft() {
+			this.currentScreen--;
+			this.scroll();
+		}
+	}, {
+		key: "scroll",
+		value: function scroll() {
+			this.game.add.tween(this.game.camera).to({
+				x: this.currentScreen * this.game.camera.width
+			}, 500, Phaser.Easing.Quadratic.InOut, true);
+			this.updateButtons();
+		}
+	}, {
+		key: "updateButtons",
+		value: function updateButtons() {
+			this.buttonLeft.visible = this.currentScreen > 0;
+			this.buttonRight.visible = this.currentScreen < this.maxScreen;
+		}
+	}]);
+
+	return LevelSelect;
+}();
+
+var LevelSelectButton = function LevelSelectButton(game, group, level, width, height, i, cb) {
+	_classCallCheck(this, LevelSelectButton);
+
+	this.g = game.add.group(group);
+	this.bg = game.add.tileSprite(0, 0, width, height, "msg-bg", null, this.g);
+	this.t = game.add.text(0, 0, i + 1 + ". " + level.name, {}, this.g);
+	this.t.wordWrap = true;
+	this.t.wordWrapWidth = width * 0.9;
+	this.t.alignIn(this.bg, Phaser.CENTER);
+	this.bg.inputEnabled = true;
+	this.bg.events.onInputDown.add(function () {
+		return cb(i);
+	});
 };
 
 /***/ }),
@@ -117701,7 +117836,8 @@ function Field(game, parentGroup, rect, data, cb) {
 	}
 	g.alignIn(rect, Phaser.CENTER);
 
-	var objectsGroup = game.add.group(g);
+	var floorGroup = game.add.group(g);
+	var solidGroup = game.add.group(g);
 	var objects = [];
 	var removedObjects = [];
 	var winFlag = false;
@@ -117710,7 +117846,7 @@ function Field(game, parentGroup, rect, data, cb) {
 		var O = objectConstructors[o.type];
 		objects.push(new O({
 			game: game,
-			group: objectsGroup,
+			group: O.floor ? floorGroup : solidGroup,
 			s: s
 		}, o, self));
 	});
@@ -117820,7 +117956,7 @@ function Field(game, parentGroup, rect, data, cb) {
 			while (1) {
 				switch (_context.prev = _context.next) {
 					case 0:
-						objectsGroup.ignoreChildInput = true;
+						g.ignoreChildInput = true;
 						i = 42;
 
 						while (step() && i--) {}
@@ -117834,7 +117970,7 @@ function Field(game, parentGroup, rect, data, cb) {
 							return o.destroy();
 						});
 						removedObjects = [];
-						objectsGroup.ignoreChildInput = false;
+						g.ignoreChildInput = false;
 
 						if (!winFlag) {
 							_context.next = 12;
@@ -118004,6 +118140,8 @@ var Omega = function (_GameObject) {
 
 	return Omega;
 }(_gameObject2.default);
+
+Omega.floor = true;
 
 exports.default = Omega;
 

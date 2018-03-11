@@ -24,4 +24,6 @@ class Omega extends GameObject{
 	}
 }
 
+Omega.floor = true;
+
 export default Omega;

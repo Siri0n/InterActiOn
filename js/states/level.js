@@ -1,7 +1,5 @@
-import Alpha from "./components/alpha";
-import Omega from "./components/omega";
-import Plus from "./components/plus";
 import MsgBox from "./components/msgBox";
+import objectConstructors from "./components/objectConstructors";
 
 class LevelState extends Phaser.State{
 	init(main, levelData, cb){
@@ -60,7 +58,7 @@ function Field(game, parentGroup, rect, data, cb){
 	var winFlag = false;
 
 	data.objects.forEach(o => {
-		var O = objectConstructors[o.type]
+		var O = objectConstructors[o.type];
 		objects.push(
 			new O(
 				{
@@ -188,11 +186,6 @@ function Field(game, parentGroup, rect, data, cb){
 	}
 }
 
-var objectConstructors = {
-	"alpha": Alpha,
-	"omega": Omega,
-	"plus": Plus
-}
 
 function Tile(game, group, S, {x, y}){
 	var img = game.add.image(x*S, y*S, "tile", null, group);

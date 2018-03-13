@@ -14,6 +14,9 @@ class Main{
 	play(i, cb){
 		this.game.state.start("level", true, false, this, levels[i], cb);
 	}
+	playCustom(data){
+		this.game.state.start("level", true, false, this, data, () => this.openEditor(data));
+	}
 	playOne(i){
 		this.play(i, () => this.goToMenu());
 	}
@@ -33,6 +36,9 @@ class Main{
 		//test
 		var levels = [...Array(88).keys()].map(i => ({name: "level " + (i + 1)}));
 		this.game.state.start("levelSelect", true, false, this, levels);
+	}
+	openEditor(data){
+		this.game.state.start("editor", true, false, this, data);
 	}
 
 

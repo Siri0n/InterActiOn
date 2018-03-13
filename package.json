@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/Siri0n/InterActiOn#readme",
   "dependencies": {
-    "phaser-ce": "^2.10.0"
+    "phaser-ce": "^2.10.1"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

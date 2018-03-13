@@ -10,11 +10,15 @@ class Omega extends GameObject{
 		this.type = "omega";
 		this.body = "none";
 		this.immobile = true;
+
+		this.onClick = new Phaser.Signal();
 		this.g = new ImageGraphics("omega", gOptions, this.position);
-		this.g.onClick(_ => {
-			field.showMessage("This is Omega. You should move Alpha here.");
-		});
+		this.g.onClick(() => this.onClick.dispatch());
 		this.field = field;
+
+		this.onClick.add(() => {
+			this.field.showMessage("This is Omega. You should move Alpha here.");
+		});
 	}
 	onEnter(o){
 		if(o.type == "alpha"){

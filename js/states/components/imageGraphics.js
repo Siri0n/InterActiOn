@@ -13,6 +13,7 @@ const TIME_UNIT = 500;
 class ImageGraphics{
 
 	constructor(key, {game, group, s}, {x, y}){
+		this.key = key;
 		this.s = s;
 		this.game = game;
 		this.g = game.add.image(x*s + s/2, y*s + s/2, key, null, group);
@@ -20,6 +21,7 @@ class ImageGraphics{
 		this.g.anchor.x = this.g.anchor.y = 0.5;
 		this.g.inputEnabled = true;
 		this.commands = [];
+		this.data = {};
 	}
 
 	onClick(f){
@@ -57,6 +59,7 @@ class ImageGraphics{
 			await this.execute(this.commands.shift());
 		}
 	}
+
 	execute(command){
 		if(command.type == "move"){
 			return new Promise((resolve, reject) => {
@@ -113,6 +116,10 @@ class ImageGraphics{
 		}
 	}
 
+	transfer(x, y){
+		this.g.x = x*this.s + this.s/2
+		this.g.y = y*this.s + this.s/2
+	}
 }
 
 export default ImageGraphics;

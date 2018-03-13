@@ -34,6 +34,20 @@ class GameObject{
 	async play(){
 		await this.g.play(); 
 	}
+	transfer(x, y){
+		this.position.x = x;
+		this.position.y = y;
+		this.g.transfer(x, y);
+	}
+	plainObject(){
+		return {
+			type: this.type,
+			position: {
+				x: this.position.x,
+				y: this.position.y
+			}
+		}
+	}
 }
 
 export default GameObject;

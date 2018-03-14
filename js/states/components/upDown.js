@@ -3,7 +3,7 @@ class UpDown{
 		this.onChange = new Phaser.Signal();
 		this.min = options.min;
 		this.max = options.max;
-		this.value = options.value;
+		this.value = options.value || this.min;
 		this.g = game.add.group(group);
 		var size = options.size || 32;
 		var style = {
@@ -27,6 +27,11 @@ class UpDown{
 			this.value--;
 			this.update();
 		}
+	}
+	set(value){
+		console.log(value);
+		this.value = Phaser.Math.clamp(value, this.min, this.max);
+		this.update();
 	}
 	update(){
 		this.valueText.text = this.value;

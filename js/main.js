@@ -1,9 +1,13 @@
 import createGame from "./game";
 import levels from "resources/levels";
+import FileSaver from "file-saver";
 
 class Main{
 	constructor(){
 		this.game = createGame();
+		window.test = this.game;
+		console.log(this.game.canvas);
+		//this.game.canvas.addEventListener("click", () => this.loadLevel());
 		this.levels = levels;
 		this.data = {nextLevel: 0};
 		this.goToMenu();
@@ -32,15 +36,20 @@ class Main{
 		}
 	}
 	selectLevel(){
-		//this.game.state.start("levelSelect", true, false, this, this.levels);
-		//test
-		var levels = [...Array(88).keys()].map(i => ({name: "level " + (i + 1)}));
-		this.game.state.start("levelSelect", true, false, this, levels);
+		this.game.state.start("levelSelect", true, false, this, this.levels);
 	}
 	openEditor(data){
 		this.game.state.start("editor", true, false, this, data);
 	}
-
+	saveLevel(data){
+		var str = JSON.stringify(data);
+		var blob = new Blob([str], {type: "text/plain;charset=utf-8"});
+		FileSaver.saveAs(blob, (data.name || "level") + ".lvl");
+	}
+	loadLevel(){
+		var input = document.createElement("input");
+		input.click();
+	}
 
 }
 

@@ -1,7 +1,9 @@
 import ImageGraphics from "./components/imageGraphics";
 import objectConstructors from "./components/objectConstructors";
 import Menu from "./components/menu";
+import MenuItem from "./components/menuItem";
 import UpDown from "./components/upDown";
+import Container from "./components/container";
 
 class EditorState extends Phaser.State{
 	init(main, data){
@@ -9,7 +11,28 @@ class EditorState extends Phaser.State{
 		this.data = data;
 	}
 	create(game){
-		var editor = new Editor(game, this.main, this.data);
+		var self = this;
+		var editor = this.editor = new Editor(game, this.main, this.data);
+		this.fileUploadHack = function(){
+			if(editor.fileUploadHack){
+				editor.fileUploadHack = false;
+				var input = document.getElementById("file");
+				input.addEventListener("change", function(){
+					var file = input.files[0];
+					if(file){
+						var fr = new FileReader();
+						fr.onload = e => {
+							var result = JSON.parse(e.target.result);
+							console.log(result);
+							result && self.main.openEditor(result);
+						}
+						fr.readAsText(file);
+					}
+				});
+				input.click();
+			}
+		}
+		game.canvas.addEventListener("click", this.fileUploadHack);
 	}
 	preload(game){
 		game.load.image("frame", "resources/frame.png");
@@ -17,8 +40,11 @@ class EditorState extends Phaser.State{
 		game.load.image("omega", "resources/omega.png");
 		game.load.image("plus", "resources/plus.png");
 		game.load.spritesheet("editor-tile", "resources/editor-tile.png", 128, 128);
-		game.load.spritesheet("delete", "resources/delete.png", 128, 128);
+		//game.load.spritesheet("delete", "resources/delete.png", 128, 128);
 		game.load.spritesheet("triangle", "resources/triangle.png", 64, 64);
+	}
+	shutdown(game){
+		game.canvas.removeEventListener("click", this.fileUploadHack);
 	}
 
 }
@@ -55,30 +81,23 @@ class Editor{
 			["alpha", "omega", "plus"]
 		);
 
-		var fieldWidth = new UpDown(game, game.world, {
-			min: 1,
-			max: 10,
-			value: data.width,
-			label: "Width: "
-		});
-
-		fieldWidth.g.alignIn(rect.clone().offset(0, game.height/3).scale(1, 0.5), Phaser.CENTER);
-
-		var fieldHeight = new UpDown(game, game.world, {
-			min: 1,
-			max: 10,
-			value: data.height,
-			label: "Height: "
-		});
-
-		fieldHeight.g.alignIn(rect.clone().offset(0, game.height/2).scale(1, 0.5), Phaser.CENTER);
+		var params = new ParamsEditor(
+			game,
+			game.world,
+			rect.clone().offset(0, game.height/3)
+		); 
 
 		function resizeField(){
-			field.resize(fieldWidth.value, fieldHeight.value);
+			field.resize(params.tabs.fieldSize.width.value, 
+				params.tabs.fieldSize.height.value);
 		}
 
-		fieldWidth.onChange.add(resizeField);
-		fieldHeight.onChange.add(resizeField);
+		params.tabs.fieldSize.width.set(data.width);
+		params.tabs.fieldSize.width.onChange.add(resizeField);
+		params.tabs.fieldSize.height.set(data.height);
+		params.tabs.fieldSize.height.onChange.add(resizeField);
+
+		params.tabs.objectProps.onDelete.add(() => field.delete(field.selected));
 
 		var menu = new Menu(
 			game,
@@ -93,13 +112,28 @@ class Editor{
 					text: "Test",
 					cb: () => main.playCustom(field.getLevelData())
 				},
+				{
+					text: "Save",
+					cb: () => main.saveLevel(field.getLevelData())
+				},
+				{
+					text: "Load",
+					cb: () => this.fileUploadHack = true
+				}
 			]
 		);
 
-		palette.onChange.add(type => {
-			console.log("onChange", type);
-			field.selectedType = type;
-		});
+		palette.onChange.add(type => field.onPaletteChange(type));
+		field.onSelected.add(o => {
+			if(o){
+				params.showTab("objectProps");
+			}else{
+				params.showTab("fieldSize");
+			}
+		})
+	}
+	test(x){
+		console.log("test " + x);
 	}
 }
 
@@ -124,6 +158,8 @@ class EditorField{
 		this.tiles = [];
 		this.objects = [];
 
+		this.onSelected = new Phaser.Signal();
+
 		for(let i = 0; i < width; i++){
 			for(let j = 0; j < height; j++){
 				this.tiles.push(new EditorTile(
@@ -142,11 +178,15 @@ class EditorField{
 	onTileClick(x, y){
 		if(this.selected){
 			this.selected.transfer(x, y);
-			this.selected = null;
-			this.frame.visible = false;
+			this.deselect();
 		}else{
 			this.add(this.selectedType, x, y);
 		}
+	}
+	onPaletteChange(type){
+		this.selectedType = type;
+		var isSolid = !objectConstructors[type].floor;
+		this.switchLayers(isSolid);
 	}
 	add(type, x, y){
 		var O = objectConstructors[type];
@@ -173,6 +213,8 @@ class EditorField{
 		}
 	}
 	resize(w, h){
+		this.height = h;
+		this.width = w;
 		this.tiles.forEach(t => {
 			if(!inside(t, w, h)){
 				t.destroy();
@@ -195,7 +237,7 @@ class EditorField{
 						this.tilesGroup,
 						this.s,
 						{x:i, y:j},
-						(x, y) => this.onTileClick.dispatch(x, y)
+						(x, y) => this.onTileClick(x, y)
 					));
 				}
 			}
@@ -208,15 +250,27 @@ class EditorField{
 		this.frame.x = o.g.g.x;
 		this.frame.y = o.g.g.y;
 		this.selected = o;
-		if(o.body == "solid"){
-			this.solidGroup.ignoreChildInput = false;
-			this.floorGroup.ignoreChildInput = true;
-		}else{
-			this.solidGroup.ignoreChildInput = true;
-			this.floorGroup.ignoreChildInput = false;
-		}
+		this.switchLayers(o.body == "solid");
+		this.onSelected.dispatch(o);
 	}
-
+	deselect(){
+		this.frame.visible = false;
+		this.selected = null;
+		this.onPaletteChange(this.selectedType);
+		this.onSelected.dispatch();
+	}
+	delete(o){
+		if(!o){
+			return;
+		}
+		o.destroy();
+		this.objects = this.objects.filter(o1 => o1 != o);
+		this.deselect();
+	}
+	switchLayers(isSolid){
+		this.solidGroup.ignoreChildInput = !isSolid;
+		this.floorGroup.ignoreChildInput = isSolid;
+	}
 }
 
 function inside(o, w, h){
@@ -272,5 +326,53 @@ class ComponentPalette{
 		this.frame.position = c.g.g.position;
 		this.selected = c.type;
 		this.onChange.dispatch(this.selected);
+	}
+}
+
+class ParamsEditor{
+	constructor(game, group, rect){
+		this.game = game;
+		this.rect = rect;
+		this.g = game.add.group(group);
+		this.tabs = {};
+		
+		this.tabs.fieldSize = new FieldSize(game, this.g, rect);
+		this.tabs.objectProps = new Props(game, this.g, rect);
+		this.showTab("fieldSize");
+	}
+	showTab(showKey){
+		Object.keys(this.tabs).forEach(key => this.tabs[key].g.visible = (key == showKey));
+	}
+}
+
+class FieldSize{
+	constructor(game, group, rect){
+		this.game = game;
+		this.rect = rect;
+		this.g = game.add.group(group);
+
+		this.width = new UpDown(game, this.g, {
+			min: 1,
+			max: 10,
+			label: "Width: "
+		});
+		this.height = new UpDown(game, this.g, {
+			min: 1,
+			max: 10,
+			label: "Height: "
+		});
+		this.g.align(1, -1, rect.width, rect.height/2, Phaser.CENTER);
+		this.g.alignIn(rect);
+	}
+}
+
+class Props{
+	constructor(game, group, rect){
+		this.game = game;
+		this.rect = rect;
+		this.g = game.add.group(group);
+		this.onDelete = new Phaser.Signal();
+		this.delete = new MenuItem(game, this.g, "Delete", () => this.onDelete.dispatch());
+		this.g.alignIn(rect, Phaser.CENTER);
 	}
 }

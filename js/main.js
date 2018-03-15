@@ -2,12 +2,19 @@ import createGame from "./game";
 import levels from "resources/levels";
 import FileSaver from "file-saver";
 
+const params = {
+	sidebarWidth: 64
+}
+
 class Main{
 	constructor(){
 		this.game = createGame();
 		window.test = this.game;
-		console.log(this.game.canvas);
-		//this.game.canvas.addEventListener("click", () => this.loadLevel());
+		this.params = {
+			sidebarButtonSize: 60,
+			sidebarOuterSize: 64
+		};
+		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
 		this.levels = levels;
 		this.data = {nextLevel: 0};
 		this.goToMenu();
@@ -15,14 +22,18 @@ class Main{
 	goToMenu(){
 		this.game.state.start("menu", true, false, this);
 	}
-	play(i, cb){
-		this.game.state.start("level", true, false, this, levels[i], cb);
+	play(i, success, cancel){
+		this.game.state.start("level", true, false, this, levels[i], success, cancel);
+	}
+	restart(data, success, cancel){
+		this.game.state.start("level", true, false, this, data, success, cancel);
 	}
 	playCustom(data){
-		this.game.state.start("level", true, false, this, data, () => this.openEditor(data));
+		var cb = () => this.openEditor(data)
+		this.game.state.start("level", true, false, this, data, cb, cb);
 	}
 	playOne(i){
-		this.play(i, () => this.goToMenu());
+		this.play(i, () => this.goToMenu(), () => this.selectLevel());
 	}
 	playAll(){
 		var i = this.data.nextLevel;
@@ -30,7 +41,9 @@ class Main{
 			this.play(i, () => {
 				this.data.nextLevel = i + 1;
 				this.playAll();
-			});
+			},
+			() => this.selectLevel()
+		);
 		}else{
 			this.goToMenu();
 		}

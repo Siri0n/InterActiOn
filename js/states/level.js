@@ -1,14 +1,42 @@
 import MsgBox from "./components/msgBox";
+import Sidebar from "./components/sidebar";
 import objectConstructors from "./components/objectConstructors";
 
 class LevelState extends Phaser.State{
-	init(main, levelData, cb){
+	init(main, levelData, successCallback, cancelCallback){
 		this.main = main;
 		this.levelData = levelData;
-		this.cb = cb;
+		this.success = successCallback;
+		this.cancel = cancelCallback;
 	}
 	create(game){
-		var field = new Field(game, null, null, this.levelData, this.cb);
+		var field = new Field(
+			game, 
+			game.world, 
+			this.main.params.fieldRect, 
+			this.levelData, 
+			this.success
+		);
+		var sidebar = new Sidebar(
+			game, 
+			game.world, 
+			[
+				{
+					key: "restart",
+					cb: () => this.main.restart(this.levelData, this.success, this.cancel)
+				},
+				{
+					key: "cancel",
+					cb: this.cancel
+				},
+				{
+					key: "menu",
+					cb: () => this.main.goToMenu()
+				}
+			],
+			this.main.params.sidebarButtonSize,
+			this.main.params.sidebarOuterSize
+		);
 	}
 	preload(game){
 		game.load.image("tile", "resources/tile.png");
@@ -16,6 +44,9 @@ class LevelState extends Phaser.State{
 		game.load.image("omega", "resources/omega.png");
 		game.load.image("plus", "resources/plus.png");
 		game.load.image("msg-bg", "resources/msg-bg.png");
+		game.load.spritesheet("restart", "resources/restart.png", 128, 128);
+		game.load.spritesheet("cancel", "resources/cancel.png", 128, 128);
+		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
 	}
 
 }

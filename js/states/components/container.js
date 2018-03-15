@@ -12,8 +12,10 @@ class GraphicsContainer{
 			//child.attr = child.attr || {};
 			if(child.setParentGroup){
 				child.setParentGroup(this.g);
-			}else{
+			}else if(child.g){
 				this.g.add(child.g);
+			}else if(child instanceof PIXI.Sprite){
+				this.g.add(child);
 			}
 		});
 		this.alignChildren();

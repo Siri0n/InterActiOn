@@ -1,25 +1,58 @@
+import Sidebar from "./components/sidebar";
+
 class LevelSelectState extends Phaser.State{
 	init(main, levels){
 		this.main = main;
 		this.levels = levels;
 	}
 	create(game){
-		var levelSelect = new LevelSelect(game, this.levels, i => this.main.playOne(i));
+		var levelSelect = new LevelSelect(
+			game, 
+			game.world, 
+			this.main.params.fieldRect, 
+			this.levels, 
+			i => this.main.playOne(i)
+		);
+		var sidebar = new Sidebar(
+			game,
+			game.world,
+			[
+				{
+					key: "up",
+					cb: () => levelSelect.scrollBack()
+				},
+				{
+					key: "down",
+					cb: () => levelSelect.scrollForward()
+				},
+				{
+					key: "menu",
+					cb: () => this.main.goToMenu()
+				}
+			],
+			this.main.params.sidebarButtonSize,
+			this.main.params.sidebarOuterSize
+		);
+		window.sidebar = sidebar;
 	}
 	preload(game){
-		game.load.spritesheet("wide-arrow", "resources/wide-arrow.png", 512, 128);
+		//game.load.spritesheet("wide-arrow", "resources/wide-arrow.png", 512, 128);
 		game.load.image("msg-bg", "resources/msg-bg.png");
+		game.load.spritesheet("up", "resources/arrow-up.png", 128, 128);
+		game.load.spritesheet("down", "resources/arrow-down.png", 128, 128);
+		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
 	}
 }
 
 export default LevelSelectState;
 
 class LevelSelect{
-	constructor(game, levels, cb){
+	constructor(game, group, rect, levels, cb){
+		this.rect = rect;
 		//game.world.bounds.width = game.world.bounds.height = 10000;
 		game.camera.bounds = null;
 
-		var supergroup = game.add.group();
+		var supergroup = game.add.group(group);
 		var groups = [];
 		var buttons = [];
 		levels.forEach((data, i) => {
@@ -31,33 +64,25 @@ class LevelSelect{
 			buttons.push(button);
 		})
 		groups.forEach(g => g.align(3, 3, 150, 150, Phaser.CENTER));
-		supergroup.align(-1, 1, game.camera.width, game.camera.height, Phaser.CENTER);
-
-		var buttonRight = this.buttonRight = game.add.button(0, 0, "wide-arrow", this.scrollRight, this, 1, 0, 2, 0);
-		buttonRight.angle = 270;
-		buttonRight.fixedToCamera = true;
-		buttonRight.anchor.x = buttonRight.anchor.y = 0.5;
-		buttonRight.cameraOffset.x = game.camera.width - buttonRight.height/2;
-		buttonRight.cameraOffset.y = game.camera.height/2;
-
-		var buttonLeft = this.buttonLeft = game.add.button(0, 0, "wide-arrow", this.scrollLeft, this, 1, 0, 2, 0);
-		buttonLeft.angle = 90;
-		buttonLeft.fixedToCamera = true;
-		buttonLeft.anchor.x = buttonLeft.anchor.y = 0.5;
-		buttonLeft.cameraOffset.x = buttonLeft.height/2;
-		buttonLeft.cameraOffset.y = game.camera.height/2;
+		supergroup.align(1, -1, rect.width, rect.height, Phaser.CENTER);
 
 		this.currentScreen = 0;
 		this.maxScreen = Math.floor(levels.length/9);
 		this.game = game;
 		this.updateButtons();
 	}
-	scrollRight(){
+	scrollForward(){
+/*		if(this.currentScreen == this.maxScreen){
+			return;
+		}*/
 		this.currentScreen++;
 		this.scroll();
 
 	}
-	scrollLeft(){
+	scrollBack(){
+/*		if(this.currentScreen == 0){
+			return;
+		}*/
 		this.currentScreen--;
 		this.scroll();
 	}
@@ -65,7 +90,7 @@ class LevelSelect{
 		this.game.add.tween(this.game.camera)
 		.to(
 			{
-				x: this.currentScreen * this.game.camera.width
+				y: this.currentScreen * this.rect.height
 			},
 			500,
 			Phaser.Easing.Quadratic.InOut,
@@ -74,8 +99,7 @@ class LevelSelect{
 		this.updateButtons();
 	}
 	updateButtons(){
-		this.buttonLeft.visible = (this.currentScreen > 0);
-		this.buttonRight.visible = (this.currentScreen < this.maxScreen);
+		//nothing for now
 	}
 }
 

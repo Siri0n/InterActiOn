@@ -1,9 +1,9 @@
 import ImageGraphics from "./components/imageGraphics";
 import objectConstructors from "./components/objectConstructors";
-import Menu from "./components/menu";
 import MenuItem from "./components/menuItem";
 import UpDown from "./components/upDown";
 import Container from "./components/container";
+import Sidebar from "./components/sidebar";
 
 class EditorState extends Phaser.State{
 	init(main, data){
@@ -39,9 +39,15 @@ class EditorState extends Phaser.State{
 		game.load.image("alpha", "resources/alpha.png");
 		game.load.image("omega", "resources/omega.png");
 		game.load.image("plus", "resources/plus.png");
+		game.load.spritesheet("power", "resources/power_.png", 128, 128);
+
 		game.load.spritesheet("editor-tile", "resources/editor-tile.png", 128, 128);
 		//game.load.spritesheet("delete", "resources/delete.png", 128, 128);
 		game.load.spritesheet("triangle", "resources/triangle.png", 64, 64);
+		game.load.spritesheet("load", "resources/load.png", 128, 128);
+		game.load.spritesheet("save", "resources/save.png", 128, 128);
+		game.load.spritesheet("play", "resources/play.png", 128, 128);
+		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
 	}
 	shutdown(game){
 		game.canvas.removeEventListener("click", this.fileUploadHack);
@@ -59,11 +65,14 @@ class Editor{
 		this.main = main;
 
 		data = data || {
+			name: "Level Name",
 			height: 4,
 			width: 4,
 			objects: []
 		}
-		var rect = new Phaser.Rectangle(game.width*3/4, 0, game.width/4, game.height/3);
+		var rect = new Phaser.Rectangle(game.width*3/4, 0, game.width/4, game.height/4);
+
+		var fieldName = new ShittyTextInput(game, game.world, main.params.fieldRect.clone().scale(1, 0.1), data.name);
 
 		var field = new EditorField(
 			game, 
@@ -84,7 +93,7 @@ class Editor{
 		var params = new ParamsEditor(
 			game,
 			game.world,
-			rect.clone().offset(0, game.height/3)
+			rect.clone().offset(0, game.height/4)
 		); 
 
 		function resizeField(){
@@ -98,39 +107,47 @@ class Editor{
 		params.tabs.fieldSize.height.onChange.add(resizeField);
 
 		params.tabs.objectProps.onDelete.add(() => field.delete(field.selected));
+		params.tabs.objectProps.power.onChange.add(p => field.selected.setPower(p));
 
-		var menu = new Menu(
-			game,
-			game.world,
-			rect.clone().offset(0, game.height*2/3),
+		var sidebar = new Sidebar(
+			game, 
+			game.world, 
 			[
 				{
-					text: "Back",
-					cb: () => main.goToMenu()
+					key: "play",
+					cb: () => this.main.playCustom(field.getLevelData())
 				},
 				{
-					text: "Test",
-					cb: () => main.playCustom(field.getLevelData())
+					key: "save",
+					cb: () => this.main.saveLevel(field.getLevelData())
 				},
 				{
-					text: "Save",
-					cb: () => main.saveLevel(field.getLevelData())
-				},
-				{
-					text: "Load",
+					key: "load",
 					cb: () => this.fileUploadHack = true
+				},
+				{
+					key: "menu",
+					cb: () => this.main.goToMenu()
 				}
-			]
+			],
+			this.main.params.sidebarButtonSize,
+			this.main.params.sidebarOuterSize
 		);
 
 		palette.onChange.add(type => field.onPaletteChange(type));
+
 		field.onSelected.add(o => {
 			if(o){
 				params.showTab("objectProps");
+				params.tabs.objectProps.showPropsFor(o);
 			}else{
 				params.showTab("fieldSize");
 			}
 		})
+
+		fieldName.onChange.add(name => field.name = name);
+
+
 	}
 	test(x){
 		console.log("test " + x);
@@ -138,12 +155,13 @@ class Editor{
 }
 
 class EditorField{
-	constructor(game, group, rect, {height, width, objects}, s){
+	constructor(game, group, rect, {name, height, width, objects}, s){
 		this.game = game;
 		this.s = s;
 		this.rect = rect;
 		this.height = height;
 		this.width = width;
+		this.name = name;
 
 		this.g = game.add.group(group);
 		this.tilesGroup = game.add.group(this.g);
@@ -173,7 +191,7 @@ class EditorField{
 		}
 		this.g.alignIn(rect, Phaser.CENTER);
 
-		objects.forEach(o => this.add(o.type, o.position.x, o.position.y));
+		objects.forEach(o => this.add(o.type, o.position.x, o.position.y, o.power));
 	}
 	onTileClick(x, y){
 		if(this.selected){
@@ -188,7 +206,7 @@ class EditorField{
 		var isSolid = !objectConstructors[type].floor;
 		this.switchLayers(isSolid);
 	}
-	add(type, x, y){
+	add(type, x, y, power){
 		var O = objectConstructors[type];
 		var o = new O(
 			{
@@ -197,7 +215,8 @@ class EditorField{
 				s: this.s
 			}, 
 			{
-				position: {x, y}
+				position: {x, y},
+				power
 			},
 			this
 		);
@@ -207,6 +226,7 @@ class EditorField{
 	}
 	getLevelData(){
 		return {
+			name: this.name,
 			height: this.height,
 			width: this.width,
 			objects: this.objects.map(o => o.plainObject())
@@ -246,6 +266,10 @@ class EditorField{
 		this.g.alignIn(this.rect, Phaser.CENTER);
 	}
 	select(o){
+		if(this.selected == o){
+			this.deselect();
+			return;
+		}
 		this.frame.visible = true;
 		this.frame.x = o.g.g.x;
 		this.frame.y = o.g.g.y;
@@ -366,13 +390,45 @@ class FieldSize{
 	}
 }
 
-class Props{
+class Props extends Container{
 	constructor(game, group, rect){
-		this.game = game;
-		this.rect = rect;
-		this.g = game.add.group(group);
+		super(game, group, rect, []);
+
 		this.onDelete = new Phaser.Signal();
-		this.delete = new MenuItem(game, this.g, "Delete", () => this.onDelete.dispatch());
+		this.delete = new MenuItem(game, game.world, "Delete", () => this.onDelete.dispatch());
+		this.power = new UpDown(game, this.g, {
+			min: 1,
+			max: 9,
+			label: "Power: "
+		});
+		this.add([
+			this.delete,
+			this.power
+		])
+	}
+	showPropsFor(o){
+		if(o.power){
+			this.power.g.visible = true;
+			this.power.set(o.power);
+		}else{
+			this.power.g.visible = false;
+		}
+	}
+}
+
+class ShittyTextInput extends MenuItem{
+	constructor(game, group, rect, text){
+		var onChange = new Phaser.Signal();
+		var cb = () => {
+			var newName = prompt("Enter level name");
+			if(!newName){
+				return;
+			}
+			onChange.dispatch(newName);
+			this.g.text = newName;
+		}
+		super(game, group, text, cb, {});
+		this.onChange = onChange;
 		this.g.alignIn(rect, Phaser.CENTER);
 	}
 }

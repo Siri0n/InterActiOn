@@ -40,13 +40,17 @@ class LevelState extends Phaser.State{
 	}
 	preload(game){
 		game.load.image("tile", "resources/tile.png");
+
 		game.load.image("alpha", "resources/alpha.png");
 		game.load.image("omega", "resources/omega.png");
 		game.load.image("plus", "resources/plus.png");
+		game.load.spritesheet("power", "resources/power_.png", 128, 128);
+
 		game.load.image("msg-bg", "resources/msg-bg.png");
 		game.load.spritesheet("restart", "resources/restart.png", 128, 128);
 		game.load.spritesheet("cancel", "resources/cancel.png", 128, 128);
 		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
+
 	}
 
 }

@@ -1,28 +1,37 @@
 import GameObject from "./gameObject";
-import ImageGraphics from "./imageGraphics";
+import AdvancedImageGraphics from "./advancedImageGraphics";
 
 const Point = Phaser.Point;
 
 class Plus extends GameObject{
-	constructor(gOptions, {position}, field){
+	constructor(gOptions, {position, power}, field){
 		super();
 		this.position = Point.parse(position);
 		this.type = "plus";
 		this.body = "solid";
+		this.power = power || 1;
 
 		this.onClick = new Phaser.Signal();
-		this.g = new ImageGraphics("plus", gOptions, this.position);
+		this.g = new AdvancedImageGraphics("plus", gOptions, this.position, this.power);
 		this.g.onClick(() => this.onClick.dispatch());
 		this.field = field;
 
 		this.onClick.add(() => {
+			var powerPoint = new Point(this.power, this.power); //nice pun, isn't it?
 			field.inAllDirections(this.position, function(obj, dir){
 				if(obj.momentum){
-					Point.add(obj.momentum, dir, obj.momentum);
+					Point.add(obj.momentum, Point.multiply(dir, powerPoint), obj.momentum);
 				}
 			});
 			field.process();	
 		});
+	}
+	setPower(p){
+		this.power = p;
+		this.g.setPower(p);
+	}
+	plainObject(){
+		return Object.assign(super.plainObject(), {power: this.power});
 	}
 }
 

@@ -56,7 +56,8 @@ export default [
 			},
 			{
 				type: "plus",
-				position: {x: 1, y: 4}
+				position: {x: 1, y: 4},
+				power: 2
 			},
 			{
 				type: "plus",

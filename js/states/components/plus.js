@@ -12,7 +12,17 @@ class Plus extends GameObject{
 		this.power = power || 1;
 
 		this.onClick = new Phaser.Signal();
-		this.g = new AdvancedImageGraphics("plus", gOptions, this.position, this.power);
+		this.g = new AdvancedImageGraphics(
+			{
+				key: "plus", 
+				tint: 0xff9999
+			}, 
+			gOptions, 
+			this.position, 
+			{
+				power: this.power
+			}
+		);
 		this.g.onClick(() => this.onClick.dispatch());
 		this.field = field;
 

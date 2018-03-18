@@ -4,12 +4,13 @@ const NULL = new Point(0, 0);
 class GameObject{
 	constructor(){
 		this.momentum = new Point(0, 0);
+		this.onClick = new Phaser.Signal();
 	}
-	moving(){
+	get moving(){
 		return !this.immobile && !this.momentum.equals(NULL);
 	}
 	plan(){
-		this.moving() && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
+		this.moving && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
 	}
 	move(){
 		var push = Point.normalize(this.momentum);

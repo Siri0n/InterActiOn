@@ -15,6 +15,14 @@ export default [
 			{
 				type: "plus",
 				position: {x: 0, y: 0}
+			},
+			{
+				type: "wall",
+				position: {x: 1, y: 0.5}
+			},
+			{
+				type: "wall",
+				position: {x: 1.5, y: 0}
 			}
 		]
 	},

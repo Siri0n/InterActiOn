@@ -36,6 +36,8 @@ class EditorState extends Phaser.State{
 	}
 	preload(game){
 		game.load.image("frame", "resources/frame.png");
+
+		game.load.spritesheet("shape", "resources/shape.png", 128, 128);
 		game.load.image("alpha", "resources/alpha.png");
 		game.load.image("omega", "resources/omega.png");
 		game.load.image("plus", "resources/plus.png");
@@ -57,7 +59,7 @@ class EditorState extends Phaser.State{
 
 export default EditorState;
 
-const S = 32;
+const S = 48;
 
 class Editor{
 	constructor(game, main, data){

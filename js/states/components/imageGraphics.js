@@ -16,16 +16,18 @@ class ImageGraphics{
 		this.key = key;
 		this.s = s;
 		this.game = game;
-		this.g = game.add.image(x*s + s/2, y*s + s/2, key, null, group);
-		this.g.width = this.g.height = s;
-		this.g.anchor.x = this.g.anchor.y = 0.5;
-		this.g.inputEnabled = true;
+		this.g = game.add.group(group);
+		this.transfer(x, y); 
+
+		this.image = game.add.image(0, 0, key, null, this.g);
+		this.image.width = this.image.height = s;
+		this.image.anchor.x = this.image.anchor.y = 0.5;
+		this.image.inputEnabled = true;
 		this.commands = [];
-		this.data = {};
 	}
 
 	onClick(f){
-		this.g.events.onInputDown.add(f);
+		this.g.onChildInputDown.add(f);
 	}
 
 	move(p){
@@ -33,7 +35,6 @@ class ImageGraphics{
 			type: "move",
 			shift: p
 		});
-		//this.g.position.add(p.x*this.s, p.y*this.s);
 	}
 
 	bump(p){

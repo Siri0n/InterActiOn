@@ -1,5 +1,5 @@
 import GameObject from "./gameObject";
-import ImageGraphics from "./imageGraphics";
+import AdvancedImageGraphics from "./advancedImageGraphics";
 
 const Point = Phaser.Point;
 
@@ -9,9 +9,8 @@ class Alpha extends GameObject{
 		this.position = Point.parse(position);
 		this.type = "alpha";
 		this.body = "solid";
-
-		this.onClick = new Phaser.Signal();
-		this.g = new ImageGraphics("alpha", gOptions, this.position);
+		
+		this.g = new AdvancedImageGraphics({key: "alpha", tint: 0xffff55}, gOptions, this.position, {});
 		this.g.onClick(() => this.onClick.dispatch());
 		this.field = field;
 

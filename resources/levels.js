@@ -15,14 +15,6 @@ export default [
 			{
 				type: "plus",
 				position: {x: 0, y: 0}
-			},
-			{
-				type: "wall",
-				position: {x: 1, y: 0.5}
-			},
-			{
-				type: "wall",
-				position: {x: 1.5, y: 0}
 			}
 		]
 	},
@@ -81,4 +73,64 @@ export default [
 			}
 		]
 	},
+	{
+	    "height": 4,
+	    "name": "Level 4",
+	    "objects": [
+	        {
+	            "position": {
+	                "x": 1,
+	                "y": 1
+	            },
+	            "type": "alpha"
+	        },
+	        {
+	            "position": {
+	                "x": 0,
+	                "y": 1
+	            },
+	            "power": 1,
+	            "type": "plus"
+	        },
+	        {
+	            "position": {
+	                "x": 2,
+	                "y": 1
+	            },
+	            "type": "omega"
+	        },
+	        {
+	            "position": {
+	                "x": 1.5,
+	                "y": 1
+	            },
+	            "type": "wall"
+	        },
+	        {
+	            "position": {
+	                "x": 2,
+	                "y": 0
+	            },
+	            "power": 1,
+	            "type": "plus"
+	        },
+	        {
+	            "position": {
+	                "x": 3,
+	                "y": 0
+	            },
+	            "power": 1,
+	            "type": "plus"
+	        },
+	        {
+	            "position": {
+	                "x": 1,
+	                "y": 3
+	            },
+	            "power": 1,
+	            "type": "plus"
+	        }
+	    ],
+	    "width": 4
+	}
 ]

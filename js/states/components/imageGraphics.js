@@ -26,6 +26,10 @@ class ImageGraphics{
 		this.commands = [];
 	}
 
+	setGroup(group){
+		group.add(this.g);
+	}
+
 	onClick(f){
 		this.g.onChildInputDown.add(f);
 	}
@@ -81,8 +85,8 @@ class ImageGraphics{
 				this.game.add.tween(this.g)
 					.to(
 						{
-							x: this.g.x + command.shift.x*this.s/4, 
-							y: this.g.y + command.shift.y*this.s/4
+							x: this.g.x + command.shift.x*this.s/8, 
+							y: this.g.y + command.shift.y*this.s/8
 						},
 						TIME_UNIT/2,
 						Phaser.Easing.Quadratic.InOut,
@@ -120,6 +124,9 @@ class ImageGraphics{
 	transfer(x, y){
 		this.g.x = x*this.s + this.s/2
 		this.g.y = y*this.s + this.s/2
+	}
+	inputEnabled(enabled){
+		this.g.ignoreChildInput = !enabled;
 	}
 }
 

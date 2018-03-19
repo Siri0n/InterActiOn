@@ -40,6 +40,15 @@ class GameObject{
 		this.position.y = y;
 		this.g.transfer(x, y);
 	}
+	setGroup(group){
+		this.g.setGroup(group);
+	}
+	getGraphicsPosition(){
+		return this.g.g.position.clone();
+	}
+	inputEnabled(enabled){
+		this.g.inputEnabled(enabled);
+	}
 	plainObject(){
 		return {
 			type: this.type,

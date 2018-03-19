@@ -91,25 +91,39 @@ class Field{
 		this.g.alignIn(rect, Phaser.CENTER);
 
 		this.floorGroup = game.add.group(this.g);
+		this.wallGroup = game.add.group(this.g);
 		this.solidGroup = game.add.group(this.g);
 		this.objects = [];
+		this.walls = [];
 		this.removedObjects = [];
 		
 		this.winFlag = false;
 
-		data.objects.forEach(o => {
-			var O = objectConstructors[o.type];
-			this.objects.push(
-				new O(
-					{
-						game, 
-						group: O.floor ? this.floorGroup : this.solidGroup,
-						s
-					}, 
-					o,
-					this
-				)
-			);
+		data.objects.forEach(objectData => {
+			var O = objectConstructors[objectData.type];
+			var obj = new O(
+				{
+					game, 
+					group: game.world, //O.floor ? this.floorGroup : this.solidGroup,
+					s
+				}, 
+				objectData,
+				this
+			)
+			var group;
+			if(obj.body == "floor"){
+				group = this.floorGroup;
+			}else if(obj.body == "wall"){
+				group = this.wallGroup;
+			}else{
+				group = this.solidGroup;
+			}
+			obj.setGroup(group);
+			if(obj.body == "wall"){
+				this.walls.push(obj);
+			}else{
+				this.objects.push(obj);
+			}
 		});
 
 		this.msgBox = new MsgBox(
@@ -132,8 +146,22 @@ class Field{
 		if(p.x < 0 || p.y < 0 || p.x >= this.data.width || p.y >= this.data.height){
 			return this.VOID;
 		}
-		var result = this.objects.filter(o => o.position.equals(p));
+		var result = this.objects.filter(o => p.equals(o.position));
 		return result;
+	}
+
+	objectsMovingTo(p){
+		return this.objects.filter(o => o.nextPosition && p.equals(o.nextPosition));
+	}
+
+	wallBetween(p1, p2){
+		var p = Point.interpolate(p1, p2, 0.5);
+		var walls = this.walls.filter(o => o.position.equals(p));
+		if(walls.length > 1){
+			throw new Error("dafuq?");
+		}else{
+			return walls[0];
+		}
 	}
 
 	inDirection(pos, dir, cb){
@@ -157,11 +185,32 @@ class Field{
 			return false;
 		}
 		movingObjects.forEach(o => o.plan());
+
+		//detect wall collision
+		var bumpingIntoWalls = [];
+		movingObjects.forEach(o => {
+			var wall = this.wallBetween(o.position, o.nextPosition);
+			if(wall){
+				bumpingIntoWalls.push(o);
+			}
+		});
+
+		movingObjects = movingObjects.filter(o => !bumpingIntoWalls.includes(o));
+		bumpingIntoWalls.forEach(o => o.bump());
+
 		var movedObjects = [];
 		while(movingObjects.length){
 			let stack = [movingObjects[0]];
 			let canMove = false;
 			while(true){
+				let movingTo = this.objectsMovingTo(stack[0].nextPosition)
+					.filter(o => (o.body == "solid") && (o != stack[0]));
+
+				if(movingTo.length > 0){
+					stack = stack.concat(movingTo);
+					break;
+				}
+
 				let objs = this.objectsAt(stack[0].nextPosition).filter(o => o.body == "solid");
 				if(objs.length > 1){
 					throw new Error("Unhandled collision");

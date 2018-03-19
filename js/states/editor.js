@@ -5,6 +5,22 @@ import UpDown from "./components/upDown";
 import Container from "./components/container";
 import Sidebar from "./components/sidebar";
 
+function EditorWallMixin(BaseClass){
+	return class extends BaseClass{
+		constructor(gOptions, options){
+			super(gOptions, options);
+			this.onClick = new Phaser.Signal();
+			this.g.inputEnabled = true;
+			this.g.events.onInputDown.add(() => this.onClick.dispatch());
+			var _s = this.s / this.g.scale.x;
+			this.g.hitArea = new Phaser.Rectangle(-_s/2, -_s/2, _s, _s);
+		}
+	}
+}
+
+var editorConstructors = Object.assign({}, objectConstructors);
+["wall"].forEach(key => editorConstructors[key] = EditorWallMixin(editorConstructors[key]));
+
 class EditorState extends Phaser.State{
 	init(main, data){
 		this.main = main;
@@ -23,7 +39,6 @@ class EditorState extends Phaser.State{
 						var fr = new FileReader();
 						fr.onload = e => {
 							var result = JSON.parse(e.target.result);
-							console.log(result);
 							result && self.main.openEditor(result);
 						}
 						fr.readAsText(file);
@@ -43,7 +58,10 @@ class EditorState extends Phaser.State{
 		game.load.image("plus", "resources/plus.png");
 		game.load.spritesheet("power", "resources/power_.png", 128, 128);
 
+		game.load.image("wall", "resources/wall.png");
+
 		game.load.spritesheet("editor-tile", "resources/editor-tile.png", 128, 128);
+		game.load.spritesheet("editor-tile-wall", "resources/editor-tile-wall.png", 128, 128);
 		//game.load.spritesheet("delete", "resources/delete.png", 128, 128);
 		game.load.spritesheet("triangle", "resources/triangle.png", 64, 64);
 		game.load.spritesheet("load", "resources/load.png", 128, 128);
@@ -89,7 +107,7 @@ class Editor{
 			game.world,
 			rect,
 			S,
-			["alpha", "omega", "plus"]
+			["alpha", "omega", "plus", "wall"]
 		);
 
 		var params = new ParamsEditor(
@@ -136,7 +154,7 @@ class Editor{
 			this.main.params.sidebarOuterSize
 		);
 
-		palette.onChange.add(type => field.onPaletteChange(type));
+		palette.onChange.add(c => field.onPaletteChange(c));
 
 		field.onSelected.add(o => {
 			if(o){
@@ -151,9 +169,6 @@ class Editor{
 
 
 	}
-	test(x){
-		console.log("test " + x);
-	}
 }
 
 class EditorField{
@@ -167,7 +182,9 @@ class EditorField{
 
 		this.g = game.add.group(group);
 		this.tilesGroup = game.add.group(this.g);
+		this.wallTilesGroup = game.add.group(this.g);
 		this.floorGroup = game.add.group(this.g);
+		this.wallGroup = game.add.group(this.g);
 		this.solidGroup = game.add.group(this.g);
 		this.frame = game.add.image(0, 0, "frame");
 		this.frame.height = this.frame.width = s;
@@ -176,44 +193,67 @@ class EditorField{
 		this.frame.visible = false;
 
 		this.tiles = [];
+		this.wallTiles = [];
 		this.objects = [];
 
 		this.onSelected = new Phaser.Signal();
 
-		for(let i = 0; i < width; i++){
-			for(let j = 0; j < height; j++){
-				this.tiles.push(new EditorTile(
-					game,
-					this.tilesGroup,
-					s,
-					{x:i, y:j},
-					(x, y) => this.onTileClick(x, y)
-				));
-			}
-		}
+		this.createTiles();
 		this.g.alignIn(rect, Phaser.CENTER);
 
 		objects.forEach(o => this.add(o.type, o.position.x, o.position.y, o.power));
+	}
+	createTiles(){
+		this.tiles = [];
+		this.wallTiles = [];
+		for(let i = 0; i < this.width; i++){
+			for(let j = 0; j < this.height; j++){
+				this.tiles.push(new EditorTile(
+					this.game,
+					this.tilesGroup,
+					this.s,
+					{x:i, y:j},
+					(x, y) => this.onTileClick(x, y)
+				));
+				if(i > 0){
+					this.wallTiles.push(new EditorWallTile(
+						this.game,
+						this.wallTilesGroup,
+						this.s,
+						{x: i - 0.5, y: j},
+						(x, y) => this.onTileClick(x, y)
+					));
+				}
+				if(j > 0){
+					this.wallTiles.push(new EditorWallTile(
+						this.game,
+						this.wallTilesGroup,
+						this.s,
+						{x: i, y: j - 0.5},
+						(x, y) => this.onTileClick(x, y)
+					));
+				}
+			}
+		}
 	}
 	onTileClick(x, y){
 		if(this.selected){
 			this.selected.transfer(x, y);
 			this.deselect();
 		}else{
-			this.add(this.selectedType, x, y);
+			this.add(this.selectedComponent.type, x, y);
 		}
 	}
-	onPaletteChange(type){
-		this.selectedType = type;
-		var isSolid = !objectConstructors[type].floor;
-		this.switchLayers(isSolid);
+	onPaletteChange(c){
+		this.selectedComponent = c;
+		this.updateInputIgnore();
 	}
 	add(type, x, y, power){
-		var O = objectConstructors[type];
-		var o = new O(
+		var O = editorConstructors[type];
+		var obj = new O(
 			{
 				game: this.game, 
-				group: O.floor ? this.floorGroup : this.solidGroup,
+				group: this.game.world,
 				s: this.s
 			}, 
 			{
@@ -222,9 +262,18 @@ class EditorField{
 			},
 			this
 		);
-		o.onClick.removeAll();
-		o.onClick.add(() => this.select(o));
-		this.objects.push(o);
+		var group;
+		if(obj.body == "floor"){
+			group = this.floorGroup;
+		}else if(obj.body == "wall"){
+			group = this.wallGroup;
+		}else{
+			group = this.solidGroup;
+		}
+		obj.setGroup(group);
+		obj.onClick.removeAll();
+		obj.onClick.add(() => this.select(obj));
+		this.objects.push(obj);
 	}
 	getLevelData(){
 		return {
@@ -237,12 +286,9 @@ class EditorField{
 	resize(w, h){
 		this.height = h;
 		this.width = w;
-		this.tiles.forEach(t => {
-			if(!inside(t, w, h)){
-				t.destroy();
-			}
-		});
-		this.tiles = this.tiles.filter(t => inside(t, w, h));
+		this.tiles.forEach(t => t.destroy());
+		this.wallTiles.forEach(t => t.destroy());
+
 		this.objects.forEach(o => {
 			if(!inside(o, w, h)){
 				o.destroy();
@@ -251,19 +297,7 @@ class EditorField{
 		this.objects = this.objects.filter(o => inside(o, w, h));
 
 
-		for(let i = 0; i < w; i++){
-			for(let j = 0; j < h; j++){
-				if(!this.tiles.some(t => (t.position.x == i) && t.position.y == j )){
-					this.tiles.push(new EditorTile(
-						this.game,
-						this.tilesGroup,
-						this.s,
-						{x:i, y:j},
-						(x, y) => this.onTileClick(x, y)
-					));
-				}
-			}
-		}
+		this.createTiles();
 
 		this.g.alignIn(this.rect, Phaser.CENTER);
 	}
@@ -273,16 +307,15 @@ class EditorField{
 			return;
 		}
 		this.frame.visible = true;
-		this.frame.x = o.g.g.x;
-		this.frame.y = o.g.g.y;
+		this.frame.position = o.getGraphicsPosition();
 		this.selected = o;
-		this.switchLayers(o.body == "solid");
+		this.updateInputIgnore();
 		this.onSelected.dispatch(o);
 	}
 	deselect(){
 		this.frame.visible = false;
 		this.selected = null;
-		this.onPaletteChange(this.selectedType);
+		this.updateInputIgnore();
 		this.onSelected.dispatch();
 	}
 	delete(o){
@@ -293,14 +326,25 @@ class EditorField{
 		this.objects = this.objects.filter(o1 => o1 != o);
 		this.deselect();
 	}
-	switchLayers(isSolid){
-		this.solidGroup.ignoreChildInput = !isSolid;
-		this.floorGroup.ignoreChildInput = isSolid;
+	updateInputIgnore(){
+		var selected = this.selected || this.selectedComponent;
+		var body = selected.body;
+		if(body == "solid"){
+			this.wallTilesGroup.ignoreChildInput = true;
+			this.tilesGroup.ignoreChildInput = false;
+		}else if(body == "floor"){
+			this.wallTilesGroup.ignoreChildInput = true;
+			this.tilesGroup.ignoreChildInput = false;
+		}else if(body == "wall"){
+			this.wallTilesGroup.ignoreChildInput = false;
+			this.tilesGroup.ignoreChildInput = true;
+		}
+		this.objects.forEach(o => o.inputEnabled(o.body == body));
 	}
 }
 
 function inside(o, w, h){
-	return (o.position.x < w) && (o.position.y < h);
+	return (o.position.x <= w - 1) && (o.position.y <= h - 1);
 }
 
 class EditorTile{
@@ -316,6 +360,21 @@ class EditorTile{
 	}
 }
 
+class EditorWallTile{
+	constructor(game, group, s, {x, y}, cb){
+		this.g = game.add.button(x*s + s/2, y*s + s/2, "editor-tile-wall", () => cb(x, y), null, 1, 0, 2, 1);
+		group.add(this.g);
+		this.g.anchor.x = this.g.anchor.y = 0.5;
+		this.g.width = this.g.height = s / 1.414;
+		this.g.angle = (x % 1) ? -45 : 45;
+		this.position = new Phaser.Point(x, y);
+	}
+	destroy(){
+		this.g.destroy();
+	}
+}
+
+
 class ComponentPalette{
 	constructor(game, group, rect, s, types){
 		var g = this.g = game.add.group(group);
@@ -323,7 +382,7 @@ class ComponentPalette{
 		g.y = rect.y;
 		var components = [];
 		types.forEach(type => {
-			var O = objectConstructors[type];
+			var O = editorConstructors[type];
 			var component = new O(
 				{
 					game, 
@@ -349,8 +408,8 @@ class ComponentPalette{
 		this.select(components[0]);
 	}
 	select(c){
-		this.frame.position = c.g.g.position;
-		this.selected = c.type;
+		this.frame.position = c.getGraphicsPosition();
+		this.selected = c;
 		this.onChange.dispatch(this.selected);
 	}
 }

@@ -5,7 +5,8 @@ function isVertical(position){
 class Wall{
 	constructor(key, {game, group, s}, position){
 		this.position = new Phaser.Point(position.x, position.y);
-		console.log("wall", this.position);
+		this.body = "wall";
+		this.game = game;
 		this.s = s;
 		this.g = game.add.image(
 			this.position.x*s + s/2, 
@@ -20,8 +21,37 @@ class Wall{
 			this.g.angle = 90;
 		}
 	}
-	play(){
-		
+	getGraphicsPosition(){
+		return this.g.position.clone();
+	}
+	setGroup(group){
+		group.add(this.g);
+	}
+	transfer(x, y){
+		this.position.x = x;
+		this.position.y = y;
+		this.g.x = x*this.s + this.s/2
+		this.g.y = y*this.s + this.s/2
+		if(isVertical(this.position)){
+			this.g.angle = 90;
+		}else{
+			this.g.angle = 0;
+		}
+	}
+	inputEnabled(enabled){
+		this.g.ignoreChildInput = !enabled;
+	}
+	plainObject(){
+		return {
+			type: this.type,
+			position: {
+				x: this.position.x,
+				y: this.position.y
+			}
+		}
+	}
+	destroy(){
+		this.g.destroy();
 	}
 }
 

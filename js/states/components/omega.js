@@ -8,7 +8,7 @@ class Omega extends GameObject{
 		super();
 		this.position = Point.parse(position);
 		this.type = "omega";
-		this.body = "none";
+		this.body = "floor";
 		this.immobile = true;
 
 		this.onClick = new Phaser.Signal();

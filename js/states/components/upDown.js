@@ -29,7 +29,6 @@ class UpDown{
 		}
 	}
 	set(value){
-		console.log(value);
 		this.value = Phaser.Math.clamp(value, this.min, this.max);
 		this.update();
 	}

@@ -38,9 +38,6 @@ class Wall{
 			this.g.angle = 0;
 		}
 	}
-	inputEnabled(enabled){
-		this.g.ignoreChildInput = !enabled;
-	}
 	plainObject(){
 		return {
 			type: this.type,

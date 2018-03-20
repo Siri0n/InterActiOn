@@ -107,7 +107,7 @@ class LevelSelectButton{
 	constructor(game, group, level, width, height, i, cb){
 		this.g = game.add.group(group);
 		this.bg = game.add.tileSprite(0, 0, width, height, "msg-bg", null, this.g);
-		this.t = game.add.text(0, 0, (i + 1) + ". " + level.name, {}, this.g);
+		this.t = game.add.text(0, 0, (i + 1) + ". " + level.name, {fontSize: 15}, this.g);
 		this.t.wordWrap = true;
 		this.t.wordWrapWidth = width * 0.9;
 		this.t.alignIn(this.bg, Phaser.CENTER);

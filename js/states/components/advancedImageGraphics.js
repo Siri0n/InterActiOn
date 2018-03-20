@@ -1,6 +1,6 @@
 import ImageGraphics from "./imageGraphics";
 
-const POSITION_COEF = 0.2;
+const POSITION_COEF = 0.15;
 const SIZE_COEF = 0.6;
 
 class AdvancedImageGraphics extends ImageGraphics{

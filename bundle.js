@@ -4185,19 +4185,19 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _alpha = __webpack_require__(349);
+var _alpha = __webpack_require__(350);
 
 var _alpha2 = _interopRequireDefault(_alpha);
 
-var _omega = __webpack_require__(350);
+var _omega = __webpack_require__(351);
 
 var _omega2 = _interopRequireDefault(_omega);
 
-var _plus = __webpack_require__(351);
+var _plus = __webpack_require__(352);
 
 var _plus2 = _interopRequireDefault(_plus);
 
-var _basicWall = __webpack_require__(352);
+var _basicWall = __webpack_require__(353);
 
 var _basicWall2 = _interopRequireDefault(_basicWall);
 
@@ -4237,7 +4237,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var POSITION_COEF = 0.2;
+var POSITION_COEF = 0.15;
 var SIZE_COEF = 0.6;
 
 var AdvancedImageGraphics = function (_ImageGraphics) {
@@ -117820,11 +117820,11 @@ var _game = __webpack_require__(344);
 
 var _game2 = _interopRequireDefault(_game);
 
-var _levels = __webpack_require__(357);
+var _levels = __webpack_require__(358);
 
 var _levels2 = _interopRequireDefault(_levels);
 
-var _fileSaver = __webpack_require__(358);
+var _fileSaver = __webpack_require__(359);
 
 var _fileSaver2 = _interopRequireDefault(_fileSaver);
 
@@ -117847,12 +117847,17 @@ var Main = function () {
 			sidebarOuterSize: 64
 		};
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
-		this.levels = _levels2.default;
 		this.data = { nextLevel: 0 };
-		this.goToMenu();
+		this.game.state.start("preload", true, false, this, _levels2.default);
 	}
 
 	_createClass(Main, [{
+		key: "loadLevels",
+		value: function loadLevels(levels) {
+			this.levels = levels;
+			this.goToMenu();
+		}
+	}, {
 		key: "goToMenu",
 		value: function goToMenu() {
 			this.game.state.start("menu", true, false, this);
@@ -117860,7 +117865,7 @@ var Main = function () {
 	}, {
 		key: "play",
 		value: function play(i, success, cancel) {
-			this.game.state.start("level", true, false, this, _levels2.default[i], success, cancel);
+			this.game.state.start("level", true, false, this, this.levels[i], success, cancel);
 		}
 	}, {
 		key: "restart",
@@ -117894,7 +117899,7 @@ var Main = function () {
 			var _this3 = this;
 
 			var i = this.data.nextLevel;
-			if (_levels2.default[i]) {
+			if (this.levels[i]) {
 				this.play(i, function () {
 					_this3.data.nextLevel = i + 1;
 					_this3.playAll();
@@ -117902,6 +117907,7 @@ var Main = function () {
 					return _this3.selectLevel();
 				});
 			} else {
+				this.data.nextLevel = 0;
 				this.goToMenu();
 			}
 		}
@@ -117948,6 +117954,7 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.default = function () {
 	var game = new Phaser.Game(800, 600, Phaser.AUTO, "");
+	game.state.add("preload", _preload2.default);
 	game.state.add("menu", _menu2.default);
 	game.state.add("levelSelect", _levelSelect2.default);
 	game.state.add("editor", _editor2.default);
@@ -117959,15 +117966,19 @@ var _menu = __webpack_require__(345);
 
 var _menu2 = _interopRequireDefault(_menu);
 
-var _levelSelect = __webpack_require__(347);
+var _preload = __webpack_require__(347);
+
+var _preload2 = _interopRequireDefault(_preload);
+
+var _levelSelect = __webpack_require__(348);
 
 var _levelSelect2 = _interopRequireDefault(_levelSelect);
 
-var _editor = __webpack_require__(348);
+var _editor = __webpack_require__(349);
 
 var _editor2 = _interopRequireDefault(_editor);
 
-var _level = __webpack_require__(355);
+var _level = __webpack_require__(356);
 
 var _level2 = _interopRequireDefault(_level);
 
@@ -118088,6 +118099,64 @@ exports.default = Menu;
 
 /***/ }),
 /* 347 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var PreloadState = function (_Phaser$State) {
+	_inherits(PreloadState, _Phaser$State);
+
+	function PreloadState() {
+		_classCallCheck(this, PreloadState);
+
+		return _possibleConstructorReturn(this, (PreloadState.__proto__ || Object.getPrototypeOf(PreloadState)).apply(this, arguments));
+	}
+
+	_createClass(PreloadState, [{
+		key: "init",
+		value: function init(main, filenames) {
+			this.main = main;
+			this.filenames = filenames;
+		}
+	}, {
+		key: "create",
+		value: function create(game) {
+			var levels = this.filenames.map(function (name) {
+				return game.cache.getJSON(name);
+			});
+			console.log(levels);
+			this.main.loadLevels(levels);
+		}
+	}, {
+		key: "preload",
+		value: function preload(game) {
+			//levels
+			this.filenames.forEach(function (name) {
+				return game.load.json(name, "resources/levels/" + name + ".lvl");
+			});
+		}
+	}]);
+
+	return PreloadState;
+}(Phaser.State);
+
+exports.default = PreloadState;
+
+/***/ }),
+/* 348 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -118239,7 +118308,7 @@ var LevelSelectButton = function LevelSelectButton(game, group, level, width, he
 
 	this.g = game.add.group(group);
 	this.bg = game.add.tileSprite(0, 0, width, height, "msg-bg", null, this.g);
-	this.t = game.add.text(0, 0, i + 1 + ". " + level.name, {}, this.g);
+	this.t = game.add.text(0, 0, i + 1 + ". " + level.name, { fontSize: 15 }, this.g);
 	this.t.wordWrap = true;
 	this.t.wordWrapWidth = width * 0.9;
 	this.t.alignIn(this.bg, Phaser.CENTER);
@@ -118250,7 +118319,7 @@ var LevelSelectButton = function LevelSelectButton(game, group, level, width, he
 };
 
 /***/ }),
-/* 348 */
+/* 349 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -118274,7 +118343,7 @@ var _menuItem = __webpack_require__(129);
 
 var _menuItem2 = _interopRequireDefault(_menuItem);
 
-var _upDown = __webpack_require__(354);
+var _upDown = __webpack_require__(355);
 
 var _upDown2 = _interopRequireDefault(_upDown);
 
@@ -118312,6 +118381,13 @@ function EditorWallMixin(BaseClass) {
 			_this.g.hitArea = new Phaser.Rectangle(-_s / 2, -_s / 2, _s, _s);
 			return _this;
 		}
+
+		_createClass(_class, [{
+			key: "inputEnabled",
+			value: function inputEnabled(enabled) {
+				this.g.inputEnabled = enabled;
+			}
+		}]);
 
 		return _class;
 	}(BaseClass);
@@ -118904,7 +118980,7 @@ var ShittyTextInput = function (_MenuItem) {
 }(_menuItem2.default);
 
 /***/ }),
-/* 349 */
+/* 350 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -118964,7 +119040,7 @@ var Alpha = function (_GameObject) {
 exports.default = Alpha;
 
 /***/ }),
-/* 350 */
+/* 351 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119040,7 +119116,7 @@ Omega.floor = true;
 exports.default = Omega;
 
 /***/ }),
-/* 351 */
+/* 352 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119131,7 +119207,7 @@ var Plus = function (_GameObject) {
 exports.default = Plus;
 
 /***/ }),
-/* 352 */
+/* 353 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119141,7 +119217,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _wall = __webpack_require__(353);
+var _wall = __webpack_require__(354);
 
 var _wall2 = _interopRequireDefault(_wall);
 
@@ -119176,7 +119252,7 @@ var BasicWall = function (_Wall) {
 exports.default = BasicWall;
 
 /***/ }),
-/* 353 */
+/* 354 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119238,11 +119314,6 @@ var Wall = function () {
 			}
 		}
 	}, {
-		key: "inputEnabled",
-		value: function inputEnabled(enabled) {
-			this.g.ignoreChildInput = !enabled;
-		}
-	}, {
 		key: "plainObject",
 		value: function plainObject() {
 			return {
@@ -119266,7 +119337,7 @@ var Wall = function () {
 exports.default = Wall;
 
 /***/ }),
-/* 354 */
+/* 355 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119347,7 +119418,7 @@ function createButton(game, group, cb, ctx, size) {
 exports.default = UpDown;
 
 /***/ }),
-/* 355 */
+/* 356 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119359,7 +119430,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _msgBox = __webpack_require__(356);
+var _msgBox = __webpack_require__(357);
 
 var _msgBox2 = _interopRequireDefault(_msgBox);
 
@@ -119755,7 +119826,7 @@ function Tile(game, group, S, _ref2) {
 exports.default = LevelState;
 
 /***/ }),
-/* 356 */
+/* 357 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119818,7 +119889,7 @@ var MsgBox = function () {
 exports.default = MsgBox;
 
 /***/ }),
-/* 357 */
+/* 358 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119827,116 +119898,10 @@ exports.default = MsgBox;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.default = [{
-	name: "Level 1",
-	height: 1,
-	width: 5,
-	objects: [{
-		type: "alpha",
-		position: { x: 1, y: 0 }
-	}, {
-		type: "omega",
-		position: { x: 4, y: 0 }
-	}, {
-		type: "plus",
-		position: { x: 0, y: 0 }
-	}]
-}, {
-	name: "Level 2",
-	height: 4,
-	width: 4,
-	objects: [{
-		type: "alpha",
-		position: { x: 1, y: 2 }
-	}, {
-		type: "omega",
-		position: { x: 3, y: 0 }
-	}, {
-		type: "plus",
-		position: { x: 1, y: 3 }
-	}, {
-		type: "plus",
-		position: { x: 0, y: 0 }
-	}]
-}, {
-	name: "Level 3",
-	height: 5,
-	width: 5,
-	objects: [{
-		type: "alpha",
-		position: { x: 1, y: 3 }
-	}, {
-		type: "omega",
-		position: { x: 4, y: 0 }
-	}, {
-		type: "plus",
-		position: { x: 1, y: 4 },
-		power: 2
-	}, {
-		type: "plus",
-		position: { x: 1, y: 1 }
-	}, {
-		type: "plus",
-		position: { x: 2, y: 4 }
-	}, {
-		type: "plus",
-		position: { x: 0, y: 2 }
-	}]
-}, {
-	"height": 4,
-	"name": "Level 4",
-	"objects": [{
-		"position": {
-			"x": 1,
-			"y": 1
-		},
-		"type": "alpha"
-	}, {
-		"position": {
-			"x": 0,
-			"y": 1
-		},
-		"power": 1,
-		"type": "plus"
-	}, {
-		"position": {
-			"x": 2,
-			"y": 1
-		},
-		"type": "omega"
-	}, {
-		"position": {
-			"x": 1.5,
-			"y": 1
-		},
-		"type": "wall"
-	}, {
-		"position": {
-			"x": 2,
-			"y": 0
-		},
-		"power": 1,
-		"type": "plus"
-	}, {
-		"position": {
-			"x": 3,
-			"y": 0
-		},
-		"power": 1,
-		"type": "plus"
-	}, {
-		"position": {
-			"x": 1,
-			"y": 3
-		},
-		"power": 1,
-		"type": "plus"
-	}],
-	"width": 4
-}];
+exports.default = ["level1", "level2", "level3", "level4", "level5", "level6", "level7"];
 
 /***/ }),
-/* 358 */
+/* 359 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/* FileSaver.js
@@ -120122,7 +120087,7 @@ var saveAs = saveAs || (function(view) {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports.saveAs = saveAs;
-} else if (("function" !== "undefined" && __webpack_require__(359) !== null) && (__webpack_require__(360) !== null)) {
+} else if (("function" !== "undefined" && __webpack_require__(360) !== null) && (__webpack_require__(361) !== null)) {
   !(__WEBPACK_AMD_DEFINE_RESULT__ = (function() {
     return saveAs;
   }).call(exports, __webpack_require__, exports, module),
@@ -120131,7 +120096,7 @@ if (typeof module !== "undefined" && module.exports) {
 
 
 /***/ }),
-/* 359 */
+/* 360 */
 /***/ (function(module, exports) {
 
 module.exports = function() {
@@ -120140,7 +120105,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 360 */
+/* 361 */
 /***/ (function(module, exports) {
 
 /* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {/* globals __webpack_amd_options__ */

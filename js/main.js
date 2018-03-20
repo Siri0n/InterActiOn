@@ -1,5 +1,5 @@
 import createGame from "./game";
-import levels from "resources/levels";
+import levelNames from "resources/levels";
 import FileSaver from "file-saver";
 
 const params = {
@@ -15,15 +15,18 @@ class Main{
 			sidebarOuterSize: 64
 		};
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
-		this.levels = levels;
 		this.data = {nextLevel: 0};
+		this.game.state.start("preload", true, false, this, levelNames);
+	}
+	loadLevels(levels){
+		this.levels = levels;
 		this.goToMenu();
 	}
 	goToMenu(){
 		this.game.state.start("menu", true, false, this);
 	}
 	play(i, success, cancel){
-		this.game.state.start("level", true, false, this, levels[i], success, cancel);
+		this.game.state.start("level", true, false, this, this.levels[i], success, cancel);
 	}
 	restart(data, success, cancel){
 		this.game.state.start("level", true, false, this, data, success, cancel);
@@ -37,7 +40,7 @@ class Main{
 	}
 	playAll(){
 		var i = this.data.nextLevel;
-		if(levels[i]){
+		if(this.levels[i]){
 			this.play(i, () => {
 				this.data.nextLevel = i + 1;
 				this.playAll();
@@ -45,6 +48,7 @@ class Main{
 			() => this.selectLevel()
 		);
 		}else{
+			this.data.nextLevel = 0;
 			this.goToMenu();
 		}
 	}

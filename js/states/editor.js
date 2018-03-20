@@ -15,6 +15,9 @@ function EditorWallMixin(BaseClass){
 			var _s = this.s / this.g.scale.x;
 			this.g.hitArea = new Phaser.Rectangle(-_s/2, -_s/2, _s, _s);
 		}
+		inputEnabled(enabled){
+			this.g.inputEnabled = enabled;
+		}
 	}
 }
 

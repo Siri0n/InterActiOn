@@ -52,7 +52,7 @@ class EditorState extends Phaser.State{
 		}
 		game.canvas.addEventListener("click", this.fileUploadHack);
 	}
-	preload(game){
+/*	preload(game){
 		game.load.image("frame", "resources/frame.png");
 
 		game.load.spritesheet("shape", "resources/shape.png", 128, 128);
@@ -71,7 +71,7 @@ class EditorState extends Phaser.State{
 		game.load.spritesheet("save", "resources/save.png", 128, 128);
 		game.load.spritesheet("play", "resources/play.png", 128, 128);
 		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
-	}
+	}*/
 	shutdown(game){
 		game.canvas.removeEventListener("click", this.fileUploadHack);
 	}
@@ -110,7 +110,7 @@ class Editor{
 			game.world,
 			rect,
 			S,
-			["alpha", "omega", "plus", "wall"]
+			["alpha", "omega", "plus", "minus", "wall"]
 		);
 
 		var params = new ParamsEditor(
@@ -400,7 +400,7 @@ class ComponentPalette{
 			component.onClick.add(() => this.select(component))
 			components.push(component);
 		})
-		g.align(2, -1, s, s, Phaser.CENTER);
+		g.align(4, -1, s, s, Phaser.CENTER);
 		this.frame = game.add.image(0, 0, "frame");
 		this.frame.height = this.frame.width = s;
 		this.frame.anchor.x = this.frame.anchor.y = 0.5;

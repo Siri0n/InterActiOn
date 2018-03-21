@@ -38,7 +38,7 @@ class LevelState extends Phaser.State{
 			this.main.params.sidebarOuterSize
 		);
 	}
-	preload(game){
+/*	preload(game){
 		game.load.image("tile", "resources/tile.png");
 
 		game.load.image("wall", "resources/wall.png");
@@ -54,7 +54,7 @@ class LevelState extends Phaser.State{
 		game.load.spritesheet("cancel", "resources/cancel.png", 128, 128);
 		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
 
-	}
+	}*/
 
 }
 

@@ -19,10 +19,12 @@ class Main{
 		this.game.state.start("preload", true, false, this, levelNames);
 	}
 	loadLevels(levels){
+		console.log("Main.loadLevels");
 		this.levels = levels;
 		this.goToMenu();
 	}
 	goToMenu(){
+		console.log("Main.goToMenu");
 		this.game.state.start("menu", true, false, this);
 	}
 	play(i, success, cancel){

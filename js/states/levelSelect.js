@@ -35,13 +35,12 @@ class LevelSelectState extends Phaser.State{
 		);
 		window.sidebar = sidebar;
 	}
-	preload(game){
-		//game.load.spritesheet("wide-arrow", "resources/wide-arrow.png", 512, 128);
+/*	preload(game){
 		game.load.image("msg-bg", "resources/msg-bg.png");
 		game.load.spritesheet("up", "resources/arrow-up.png", 128, 128);
 		game.load.spritesheet("down", "resources/arrow-down.png", 128, 128);
 		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
-	}
+	}*/
 }
 
 export default LevelSelectState;
@@ -72,17 +71,17 @@ class LevelSelect{
 		this.updateButtons();
 	}
 	scrollForward(){
-/*		if(this.currentScreen == this.maxScreen){
+		if(this.currentScreen == this.maxScreen){
 			return;
-		}*/
+		}
 		this.currentScreen++;
 		this.scroll();
 
 	}
 	scrollBack(){
-/*		if(this.currentScreen == 0){
+		if(this.currentScreen == 0){
 			return;
-		}*/
+		}
 		this.currentScreen--;
 		this.scroll();
 	}

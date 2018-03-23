@@ -40,6 +40,9 @@ class PreloadState extends Phaser.State{
 		game.load.spritesheet("editor-tile-wall", "editor-tile-wall.png", 128, 128);
 		game.load.spritesheet("triangle", "triangle.png", 64, 64);
 		game.load.image("frame", "frame.png");
+		//sound
+		game.load.audio("bgm", "sound/bgm-test.mp3", true);
+		game.load.audio("pusch", "sound/pusch.wav", true);
 	}
 }
 

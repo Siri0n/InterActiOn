@@ -150,7 +150,7 @@ class Editor{
 				},
 				{
 					key: "menu",
-					cb: () => this.main.goToMenu()
+					cb: () => this.main.settings.open()
 				}
 			],
 			this.main.params.sidebarButtonSize,

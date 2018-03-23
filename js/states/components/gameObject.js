@@ -9,6 +9,9 @@ class GameObject{
 	get moving(){
 		return !this.immobile && !this.momentum.equals(NULL);
 	}
+	activate(){
+		this.g.activate();
+	}
 	plan(){
 		this.moving && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
 	}

@@ -12,10 +12,11 @@ const TIME_UNIT = 500;
 
 class ImageGraphics{
 
-	constructor(key, {game, group, s}, {x, y}){
+	constructor(key, {game, group, s, audio}, {x, y}){
 		this.key = key;
 		this.s = s;
 		this.game = game;
+		this.audio = audio;
 		this.g = game.add.group(group);
 		this.transfer(x, y); 
 
@@ -34,6 +35,12 @@ class ImageGraphics{
 		this.g.onChildInputDown.add(f);
 	}
 
+	activate(){
+		this.commands.push({
+			type: "activate",
+			sound: "pusch"
+		});
+	}
 	move(p){
 		this.commands.push({
 			type: "move",
@@ -66,6 +73,9 @@ class ImageGraphics{
 	}
 
 	execute(command){
+		if(command.sound){
+			this.audio.playSound(command.sound);
+		}
 		if(command.type == "move"){
 			return new Promise((resolve, reject) => {
 				this.game.add.tween(this.g)
@@ -115,6 +125,20 @@ class ImageGraphics{
 						TIME_UNIT,
 						Phaser.Easing.Linear.None,
 						true
+					)
+					.onComplete.addOnce(resolve);
+			})
+		}else if(command.type == "activate"){
+			return new Promise((resolve, reject) => {
+				this.game.add.tween(this.g.scale)
+					.to(
+						{
+							x: 1.1,
+							y: 1.1
+						},
+						TIME_UNIT/2,
+						Phaser.Easing.Quadratic.InOut,
+						true, 0, 0, true
 					)
 					.onComplete.addOnce(resolve);
 			})

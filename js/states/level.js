@@ -13,7 +13,8 @@ class LevelState extends Phaser.State{
 		var field = new Field(
 			game, 
 			game.world, 
-			this.main.params.fieldRect, 
+			this.main.params.fieldRect,
+			this.main.audio,
 			this.levelData, 
 			this.success
 		);
@@ -31,7 +32,7 @@ class LevelState extends Phaser.State{
 				},
 				{
 					key: "menu",
-					cb: () => this.main.goToMenu()
+					cb: () => this.main.settings.open()
 				}
 			],
 			this.main.params.sidebarButtonSize,
@@ -62,7 +63,7 @@ const s = 48;
 const Point = Phaser.Point;
 
 class Field{
-	constructor(game, parentGroup, rect, data, cb){
+	constructor(game, parentGroup, rect, audio, data, cb){
 		this.game = game;
 		this.data = data;
 		this.cb = cb;
@@ -104,8 +105,9 @@ class Field{
 			var obj = new O(
 				{
 					game, 
-					group: game.world, //O.floor ? this.floorGroup : this.solidGroup,
-					s
+					group: game.world,
+					s,
+					audio
 				}, 
 				objectData,
 				this

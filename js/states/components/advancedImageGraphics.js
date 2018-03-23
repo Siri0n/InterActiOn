@@ -4,8 +4,8 @@ const POSITION_COEF = 0.15;
 const SIZE_COEF = 0.6;
 
 class AdvancedImageGraphics extends ImageGraphics{
-	constructor({key, tint}, {game, group, s}, {x, y}, {movable, power}){
-		super("shape", {game, group, s}, {x, y});
+	constructor({key, tint}, {game, group, s, audio}, {x, y}, {movable, power}){
+		super("shape", {game, group, s, audio}, {x, y});
 
 		this.image.tint = tint;
 

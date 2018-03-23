@@ -1,10 +1,8 @@
 import createGame from "./game";
 import levelNames from "resources/levels";
 import FileSaver from "file-saver";
-
-const params = {
-	sidebarWidth: 64
-}
+import Container from "./states/components/container";
+import MenuItem from "./states/components/menuItem";
 
 class Main{
 	constructor(){
@@ -12,19 +10,22 @@ class Main{
 		window.test = this.game;
 		this.params = {
 			sidebarButtonSize: 60,
-			sidebarOuterSize: 64
+			sidebarOuterSize: 64,
+			screen: new Phaser.Rectangle(0, 0, this.game.width, this.game.height),
+			menuRect: new Phaser.Rectangle(0, this.game.height/4, this.game.width, this.game.height/2)
 		};
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
 		this.data = {nextLevel: 0};
 		this.game.state.start("preload", true, false, this, levelNames);
 	}
 	loadLevels(levels){
-		console.log("Main.loadLevels");
 		this.levels = levels;
+		this.audio = new Audio(this.game, ["pusch"], ["bgm"]);
+		this.audio.playMusic("bgm");
+		this.settings = new Settings(this.game, this);
 		this.goToMenu();
 	}
 	goToMenu(){
-		console.log("Main.goToMenu");
 		this.game.state.start("menu", true, false, this);
 	}
 	play(i, success, cancel){
@@ -72,4 +73,89 @@ class Main{
 
 }
 
+class Audio{
+	constructor(game, soundNames, musicNames){
+		this.sound = {};
+		this.music = {};
+		this.game = game;
+		soundNames.forEach(name => {
+			var sound = game.add.audio(name);
+			this.sound[name] = sound;
+		});
+		musicNames.forEach(name => {
+			var music = game.add.audio(name, 0.5, true);
+			this.music[name] = music;
+		});
+		this.currentMusic = null;
+		this._soundOn = this._musicOn = true;
+	}
+	playSound(name){
+		this.sound[name] && this.sound[name].play();
+	}
+	playMusic(name){
+		if(this.currentMusic){
+			this.currentMusic.stop();
+		}
+		var newMusic = this.music[name];
+		if(newMusic){
+			this.currentMusic = newMusic;
+			newMusic.play();
+		}
+	}
+	get soundOn(){
+		return this._soundOn;
+	}
+	set soundOn(val){
+		this._soundOn = val;
+		this.mute(this.sound, !val);
+	}
+	get musicOn(){
+		return this._soundOn;
+	}
+	set musicOn(val){
+		this._soundOn = val;
+		this.mute(this.music, !val);
+	}
+	mute(obj, val){
+		for(let key of Object.keys(obj)){
+			obj[key].mute = val;
+		}
+	}
+}
+
+class Settings{
+	constructor(game, main){
+		this.game = game;
+		this.g = game.add.group(game.stage);
+		var rect = main.params.screen;
+		this.bg = game.add.tileSprite(rect.x, rect.y, rect.width, rect.height, "msg-bg", 0, this.g);
+		this.menu = new Container(game, this.g, main.params.menuRect, [
+			new MenuItem(game, this.g, "Resume", () => this.close()),
+			new Toggle(game, this.g, "Sounds on", "Sounds off", val => main.audio.soundOn = val, main.audio.soundOn),
+			new Toggle(game, this.g, "Music on", "Music off", val => main.audio.musicOn = val, main.audio.musicOn),
+			new MenuItem(game, this.g, "Go to main menu", () => {
+				this.close();
+				main.goToMenu();
+			})
+		]);
+		this.g.visible = false;
+	}
+	open(){
+		this.g.visible = true;
+	}
+	close(){
+		this.g.visible = false;
+	}
+}
+
+class Toggle extends MenuItem{
+	constructor(game, group, trueText, falseText, cb, initialValue){
+		super(game, group, initialValue ? trueText : falseText, () => {
+			this.value = !this.value;
+			this.g.text = this.value ? trueText : falseText;
+			cb(this.value);
+		});
+		this.value = initialValue;
+	}
+}
 export default Main;

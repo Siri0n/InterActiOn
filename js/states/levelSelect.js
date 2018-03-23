@@ -27,7 +27,7 @@ class LevelSelectState extends Phaser.State{
 				},
 				{
 					key: "menu",
-					cb: () => this.main.goToMenu()
+					cb: () => this.main.settings.open()
 				}
 			],
 			this.main.params.sidebarButtonSize,

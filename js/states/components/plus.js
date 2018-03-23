@@ -33,6 +33,7 @@ class Plus extends GameObject{
 					Point.add(obj.momentum, Point.multiply(dir, powerPoint), obj.momentum);
 				}
 			});
+			this.activate();
 			field.process();	
 		});
 	}

@@ -1,4 +1,5 @@
 import createGame from "./game";
+import PlayerData from "./playerData";
 import levelNames from "resources/levels";
 import FileSaver from "file-saver";
 import Container from "./states/components/container";
@@ -14,14 +15,17 @@ class Main{
 			screen: new Phaser.Rectangle(0, 0, this.game.width, this.game.height),
 			menuRect: new Phaser.Rectangle(0, this.game.height/4, this.game.width, this.game.height/2)
 		};
+		this.playerData = new PlayerData();
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
 		this.data = {nextLevel: 0};
 		this.game.state.start("preload", true, false, this, levelNames);
 	}
 	loadLevels(levels){
 		this.levels = levels;
-		this.audio = new Audio(this.game, ["pusch"], ["bgm"]);
+		this.audio = new Audio(this.game, ["pusch", "fade"], ["bgm"]);
 		this.audio.playMusic("bgm");
+		this.audio.soundOn = this.playerData.getBoolean("sound", true);
+		this.audio.musicOn = this.playerData.getBoolean("music", true);
 		this.settings = new Settings(this.game, this);
 		this.goToMenu();
 	}
@@ -66,9 +70,13 @@ class Main{
 		var blob = new Blob([str], {type: "text/plain;charset=utf-8"});
 		FileSaver.saveAs(blob, (data.name || "level") + ".lvl");
 	}
-	loadLevel(){
-		var input = document.createElement("input");
-		input.click();
+	setAudio(type, value){
+		if(type == "sound"){
+			this.audio.soundOn = value;
+		}else if(type == "music"){
+			this.audio.musicOn = value;
+		}
+		this.playerData.set(type, value);
 	}
 
 }
@@ -110,10 +118,10 @@ class Audio{
 		this.mute(this.sound, !val);
 	}
 	get musicOn(){
-		return this._soundOn;
+		return this._musicOn;
 	}
 	set musicOn(val){
-		this._soundOn = val;
+		this._musicOn = val;
 		this.mute(this.music, !val);
 	}
 	mute(obj, val){
@@ -131,8 +139,8 @@ class Settings{
 		this.bg = game.add.tileSprite(rect.x, rect.y, rect.width, rect.height, "msg-bg", 0, this.g);
 		this.menu = new Container(game, this.g, main.params.menuRect, [
 			new MenuItem(game, this.g, "Resume", () => this.close()),
-			new Toggle(game, this.g, "Sounds on", "Sounds off", val => main.audio.soundOn = val, main.audio.soundOn),
-			new Toggle(game, this.g, "Music on", "Music off", val => main.audio.musicOn = val, main.audio.musicOn),
+			new Toggle(game, this.g, "Sounds on", "Sounds off", val => main.setAudio("sound", val), main.audio.soundOn),
+			new Toggle(game, this.g, "Music on", "Music off", val => main.setAudio("music", val), main.audio.musicOn),
 			new MenuItem(game, this.g, "Go to main menu", () => {
 				this.close();
 				main.goToMenu();

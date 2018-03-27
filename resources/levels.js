@@ -1,7 +1,8 @@
 export default [
-	"level1", "level2", "level3",
-	"level4", "level5", "level6",
-	"level7", "level8", "level9",
+	"Intro", "First Step", "Indirect",
+	"Walls!", "Stopper", "Around",
+	"Power up", "Minus", "Tandem",
 
-	"level10"
+	"Spiral", "Arkanoid", "South Cross",
+	"Snake Pass", "Wings"
 ];

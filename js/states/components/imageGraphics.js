@@ -57,7 +57,8 @@ class ImageGraphics{
 
 	fade(){
 		this.commands.push({
-			type: "fade"
+			type: "fade",
+			sound: "fade"
 		});
 	}
 

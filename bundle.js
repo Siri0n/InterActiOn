@@ -3160,7 +3160,8 @@ var ImageGraphics = function () {
 		key: "fade",
 		value: function fade() {
 			this.commands.push({
-				type: "fade"
+				type: "fade",
+				sound: "fade"
 			});
 		}
 	}, {
@@ -117851,11 +117852,15 @@ var _game = __webpack_require__(344);
 
 var _game2 = _interopRequireDefault(_game);
 
-var _levels = __webpack_require__(359);
+var _playerData = __webpack_require__(359);
+
+var _playerData2 = _interopRequireDefault(_playerData);
+
+var _levels = __webpack_require__(360);
 
 var _levels2 = _interopRequireDefault(_levels);
 
-var _fileSaver = __webpack_require__(360);
+var _fileSaver = __webpack_require__(361);
 
 var _fileSaver2 = _interopRequireDefault(_fileSaver);
 
@@ -117887,6 +117892,7 @@ var Main = function () {
 			screen: new Phaser.Rectangle(0, 0, this.game.width, this.game.height),
 			menuRect: new Phaser.Rectangle(0, this.game.height / 4, this.game.width, this.game.height / 2)
 		};
+		this.playerData = new _playerData2.default();
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
 		this.data = { nextLevel: 0 };
 		this.game.state.start("preload", true, false, this, _levels2.default);
@@ -117896,8 +117902,10 @@ var Main = function () {
 		key: "loadLevels",
 		value: function loadLevels(levels) {
 			this.levels = levels;
-			this.audio = new Audio(this.game, ["pusch"], ["bgm"]);
+			this.audio = new Audio(this.game, ["pusch", "fade"], ["bgm"]);
 			this.audio.playMusic("bgm");
+			this.audio.soundOn = this.playerData.getBoolean("sound", true);
+			this.audio.musicOn = this.playerData.getBoolean("music", true);
 			this.settings = new Settings(this.game, this);
 			this.goToMenu();
 		}
@@ -117973,10 +117981,14 @@ var Main = function () {
 			_fileSaver2.default.saveAs(blob, (data.name || "level") + ".lvl");
 		}
 	}, {
-		key: "loadLevel",
-		value: function loadLevel() {
-			var input = document.createElement("input");
-			input.click();
+		key: "setAudio",
+		value: function setAudio(type, value) {
+			if (type == "sound") {
+				this.audio.soundOn = value;
+			} else if (type == "music") {
+				this.audio.musicOn = value;
+			}
+			this.playerData.set(type, value);
 		}
 	}]);
 
@@ -118061,10 +118073,10 @@ var Audio = function () {
 	}, {
 		key: "musicOn",
 		get: function get() {
-			return this._soundOn;
+			return this._musicOn;
 		},
 		set: function set(val) {
-			this._soundOn = val;
+			this._musicOn = val;
 			this.mute(this.music, !val);
 		}
 	}]);
@@ -118085,9 +118097,9 @@ var Settings = function () {
 		this.menu = new _container2.default(game, this.g, main.params.menuRect, [new _menuItem2.default(game, this.g, "Resume", function () {
 			return _this5.close();
 		}), new Toggle(game, this.g, "Sounds on", "Sounds off", function (val) {
-			return main.audio.soundOn = val;
+			return main.setAudio("sound", val);
 		}, main.audio.soundOn), new Toggle(game, this.g, "Music on", "Music off", function (val) {
-			return main.audio.musicOn = val;
+			return main.setAudio("music", val);
 		}, main.audio.musicOn), new _menuItem2.default(game, this.g, "Go to main menu", function () {
 			_this5.close();
 			main.goToMenu();
@@ -118376,6 +118388,7 @@ var PreloadState = function (_Phaser$State) {
 			//sound
 			game.load.audio("bgm", "sound/bgm-test.mp3", true);
 			game.load.audio("pusch", "sound/pusch.wav", true);
+			game.load.audio("fade", "sound/fade.wav", true);
 		}
 	}]);
 
@@ -120218,10 +120231,60 @@ exports.default = MsgBox;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.default = ["level1", "level2", "level3", "level4", "level5", "level6", "level7", "level8", "level9", "level10"];
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var PlayerData = function () {
+	function PlayerData() {
+		_classCallCheck(this, PlayerData);
+	}
+
+	_createClass(PlayerData, [{
+		key: "get",
+		value: function get(key, def) {
+			var result = window.localStorage.getItem(key);
+			return result === null ? def : result;
+		}
+	}, {
+		key: "set",
+		value: function set(key, val) {
+			window.localStorage.setItem(key, val);
+		}
+	}, {
+		key: "getBoolean",
+		value: function getBoolean(key, def) {
+			var result = this.get(key, def);
+			if (result === "true") {
+				return true;
+			} else if (result === "false") {
+				return false;
+			} else {
+				return !!result;
+			}
+		}
+	}]);
+
+	return PlayerData;
+}();
+
+exports.default = PlayerData;
 
 /***/ }),
 /* 360 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.default = ["Intro", "First Step", "Indirect", "Walls!", "Stopper", "Around", "Power up", "Minus", "Tandem", "Spiral", "Arkanoid", "South Cross", "Snake Pass", "Wings"];
+
+/***/ }),
+/* 361 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/* FileSaver.js
@@ -120407,7 +120470,7 @@ var saveAs = saveAs || (function(view) {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports.saveAs = saveAs;
-} else if (("function" !== "undefined" && __webpack_require__(361) !== null) && (__webpack_require__(362) !== null)) {
+} else if (("function" !== "undefined" && __webpack_require__(362) !== null) && (__webpack_require__(363) !== null)) {
   !(__WEBPACK_AMD_DEFINE_RESULT__ = (function() {
     return saveAs;
   }).call(exports, __webpack_require__, exports, module),
@@ -120416,7 +120479,7 @@ if (typeof module !== "undefined" && module.exports) {
 
 
 /***/ }),
-/* 361 */
+/* 362 */
 /***/ (function(module, exports) {
 
 module.exports = function() {
@@ -120425,7 +120488,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 362 */
+/* 363 */
 /***/ (function(module, exports) {
 
 /* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {/* globals __webpack_amd_options__ */

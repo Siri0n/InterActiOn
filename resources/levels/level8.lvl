@@ -1,1 +1,0 @@
-﻿{"name":"Minus","height":3,"width":3,"objects":[{"type":"minus","position":{"x":2,"y":1},"power":1},{"type":"plus","position":{"x":2,"y":0},"power":1},{"type":"minus","position":{"x":0,"y":2},"power":1},{"type":"omega","position":{"x":1,"y":1}},{"type":"alpha","position":{"x":1,"y":0}},{"type":"wall","position":{"x":2,"y":1.5}}]}

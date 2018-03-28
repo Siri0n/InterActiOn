@@ -18,6 +18,7 @@ class PreloadState extends Phaser.State{
 		game.load.spritesheet("down", "arrow-down.png", 128, 128);
 		game.load.spritesheet("menu", "menu-button.png", 128, 128);
 		game.load.spritesheet("restart", "restart.png", 128, 128);
+		game.load.spritesheet("undo", "undo.png", 128, 128);
 		game.load.spritesheet("cancel", "cancel.png", 128, 128);
 		game.load.spritesheet("load", "load.png", 128, 128);
 		game.load.spritesheet("save", "save.png", 128, 128);

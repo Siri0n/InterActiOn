@@ -1959,11 +1959,28 @@ var GameObject = function () {
 
 		this.momentum = new Point(0, 0);
 		this.onClick = new Phaser.Signal();
+		this.command = null;
 	}
 
 	_createClass(GameObject, [{
-		key: "activate",
-		value: function activate() {
+		key: "setCommand",
+		value: function setCommand(command, override) {
+			if (!this.command || override) {
+				this.command = command;
+			}
+		}
+	}, {
+		key: "execute",
+		value: function execute() {
+			//reset temporary data
+			this.justMoved = false;
+			var command = this.command || "wait";
+			this.command = null;
+			this["_" + command]();
+		}
+	}, {
+		key: "_activate",
+		value: function _activate() {
 			this.g.activate();
 		}
 	}, {
@@ -1972,27 +1989,33 @@ var GameObject = function () {
 			this.moving && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
 		}
 	}, {
-		key: "move",
-		value: function move() {
+		key: "_move",
+		value: function _move() {
 			var push = Point.normalize(this.momentum);
 			this.g.move(push);
 			this.position = this.nextPosition;
 			this.nextPosition = null;
 			this.momentum = Point.subtract(this.momentum, push);
+			this.justMoved = true;
 		}
 	}, {
-		key: "bump",
-		value: function bump() {
+		key: "_bump",
+		value: function _bump() {
 			var push = Point.normalize(this.momentum);
 			this.g.bump(push);
 			this.nextPosition = null;
 			this.momentum = Point.subtract(this.momentum, push);
 		}
 	}, {
-		key: "disappear",
-		value: function disappear() {
+		key: "_disappear",
+		value: function _disappear() {
 			this.g.fade();
 			this.field.remove(this);
+		}
+	}, {
+		key: "_wait",
+		value: function _wait() {
+			this.g.wait();
 		}
 	}, {
 		key: "destroy",
@@ -3095,6 +3118,12 @@ function removeConsequentBumps(commands) {
 	}
 }
 
+function removeTrailingWaits(commands) {
+	while (commands.length && commands[commands.length - 1].type == "wait") {
+		commands.pop();
+	}
+}
+
 var TIME_UNIT = 500;
 
 var ImageGraphics = function () {
@@ -3165,6 +3194,13 @@ var ImageGraphics = function () {
 			});
 		}
 	}, {
+		key: "wait",
+		value: function wait() {
+			this.commands.push({
+				type: "wait"
+			});
+		}
+	}, {
 		key: "destroy",
 		value: function destroy() {
 			this.g.destroy();
@@ -3178,21 +3214,22 @@ var ImageGraphics = function () {
 						switch (_context.prev = _context.next) {
 							case 0:
 								removeConsequentBumps(this.commands);
+								removeTrailingWaits(this.commands);
 
-							case 1:
+							case 2:
 								if (!this.commands.length) {
-									_context.next = 6;
+									_context.next = 7;
 									break;
 								}
 
-								_context.next = 4;
+								_context.next = 5;
 								return this.execute(this.commands.shift());
 
-							case 4:
-								_context.next = 1;
+							case 5:
+								_context.next = 2;
 								break;
 
-							case 6:
+							case 7:
 							case "end":
 								return _context.stop();
 						}
@@ -118363,6 +118400,7 @@ var PreloadState = function (_Phaser$State) {
 			game.load.spritesheet("down", "arrow-down.png", 128, 128);
 			game.load.spritesheet("menu", "menu-button.png", 128, 128);
 			game.load.spritesheet("restart", "restart.png", 128, 128);
+			game.load.spritesheet("undo", "undo.png", 128, 128);
 			game.load.spritesheet("cancel", "cancel.png", 128, 128);
 			game.load.spritesheet("load", "load.png", 128, 128);
 			game.load.spritesheet("save", "save.png", 128, 128);
@@ -119341,8 +119379,8 @@ var Omega = function (_GameObject) {
 		key: "onEnter",
 		value: function onEnter(o) {
 			if (o.type == "alpha") {
-				o.disappear();
-				this.field.win();
+				o.setCommand("disappear");
+				this.setCommand("disappear");
 			}
 		}
 	}]);
@@ -119422,7 +119460,7 @@ var Plus = function (_GameObject) {
 					Point.add(obj.momentum, Point.multiply(dir, powerPoint), obj.momentum);
 				}
 			});
-			_this.activate();
+			_this.setCommand("activate");
 			field.process();
 		});
 		return _this;
@@ -119514,7 +119552,7 @@ var Plus = function (_GameObject) {
 					Point.add(obj.momentum, Point.multiply(dir, powerPoint), obj.momentum);
 				}
 			});
-			_this.activate();
+			_this.setCommand("activate");
 			field.process();
 		});
 		return _this;
@@ -119778,6 +119816,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -119808,9 +119848,14 @@ var LevelState = function (_Phaser$State) {
 
 			var field = new Field(game, game.world, this.main.params.fieldRect, this.main.audio, this.levelData, this.success);
 			var sidebar = new _sidebar2.default(game, game.world, [{
+				key: "undo",
+				cb: function cb() {
+					return field.undo();
+				}
+			}, {
 				key: "restart",
 				cb: function cb() {
-					return _this2.main.restart(_this2.levelData, _this2.success, _this2.cancel);
+					return field.restart();
 				}
 			}, {
 				key: "cancel",
@@ -119822,24 +119867,6 @@ var LevelState = function (_Phaser$State) {
 				}
 			}], this.main.params.sidebarButtonSize, this.main.params.sidebarOuterSize);
 		}
-		/*	preload(game){
-  		game.load.image("tile", "resources/tile.png");
-  
-  		game.load.image("wall", "resources/wall.png");
-  
-  		game.load.spritesheet("shape", "resources/shape.png", 128, 128);
-  		game.load.image("alpha", "resources/alpha.png");
-  		game.load.image("omega", "resources/omega.png");
-  		game.load.image("plus", "resources/plus.png");
-  		game.load.spritesheet("power", "resources/power_.png", 128, 128);
-  
-  		game.load.image("msg-bg", "resources/msg-bg.png");
-  		game.load.spritesheet("restart", "resources/restart.png", 128, 128);
-  		game.load.spritesheet("cancel", "resources/cancel.png", 128, 128);
-  		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
-  
-  	}*/
-
 	}]);
 
 	return LevelState;
@@ -119850,12 +119877,12 @@ var Point = Phaser.Point;
 
 var Field = function () {
 	function Field(game, parentGroup, rect, audio, data, cb) {
-		var _this3 = this;
-
 		_classCallCheck(this, Field);
 
 		this.game = game;
 		this.data = data;
+		this.s = s;
+		this.audio = audio;
 		this.cb = cb;
 
 		this.UP = new Point(0, 1);
@@ -119874,6 +119901,10 @@ var Field = function () {
 
 		this.tilesGroup = game.add.group(this.g);
 		this.tiles = [];
+
+		this.width = data.width;
+		this.height = data.height;
+
 		for (var x = 0; x < data.width; x++) {
 			for (var y = 0; y < data.height; y++) {
 				this.tiles.push(new Tile(game, this.tilesGroup, s, { x: x, y: y }));
@@ -119888,36 +119919,85 @@ var Field = function () {
 		this.walls = [];
 		this.removedObjects = [];
 
-		this.winFlag = false;
+		this.populate(data);
 
-		data.objects.forEach(function (objectData) {
-			var O = _objectConstructors2.default[objectData.type];
-			var obj = new O({
-				game: game,
-				group: game.world,
-				s: s,
-				audio: audio
-			}, objectData, _this3);
-			var group;
-			if (obj.body == "floor") {
-				group = _this3.floorGroup;
-			} else if (obj.body == "wall") {
-				group = _this3.wallGroup;
-			} else {
-				group = _this3.solidGroup;
-			}
-			obj.setGroup(group);
-			if (obj.body == "wall") {
-				_this3.walls.push(obj);
-			} else {
-				_this3.objects.push(obj);
-			}
-		});
+		this.history = [];
 
 		this.msgBox = new _msgBox2.default(game, parentGroup, new Phaser.Rectangle(rect.x + rect.width / 4, rect.y + rect.height / 4, rect.width / 2, rect.height / 2));
 	}
 
 	_createClass(Field, [{
+		key: "populate",
+		value: function populate(data) {
+			var _this3 = this;
+
+			data.objects.forEach(function (objectData) {
+				var O = _objectConstructors2.default[objectData.type];
+				var obj = new O({
+					game: _this3.game,
+					group: _this3.game.world,
+					s: _this3.s,
+					audio: _this3.audio
+				}, objectData, _this3);
+				var group;
+				if (obj.body == "floor") {
+					group = _this3.floorGroup;
+				} else if (obj.body == "wall") {
+					group = _this3.wallGroup;
+				} else {
+					group = _this3.solidGroup;
+				}
+				obj.setGroup(group);
+				if (obj.body == "wall") {
+					_this3.walls.push(obj);
+				} else {
+					_this3.objects.push(obj);
+				}
+			});
+		}
+	}, {
+		key: "undo",
+		value: function undo(n) {
+			console.log(this.history);
+			if (!this.history.length) {
+				return;
+			}
+			n = n || 1;
+			n = Math.min(n, this.history.length);
+			var data;
+			while (n--) {
+				data = this.history.pop();
+			}
+
+			this.objects.forEach(function (o) {
+				return o.destroy();
+			});
+			this.objects = [];
+			this.walls.forEach(function (w) {
+				return w.destroy();
+			});
+			this.walls = [];
+
+			this.populate(data);
+		}
+	}, {
+		key: "restart",
+		value: function restart() {
+			this.undo(this.history.length);
+		}
+	}, {
+		key: "getLevelData",
+		value: function getLevelData() {
+			var result = {
+				width: this.width,
+				height: this.height
+			};
+			result.objects = [].concat(_toConsumableArray(this.objects), _toConsumableArray(this.walls)).map(function (o) {
+				return o.plainObject();
+			});
+			return result;
+		}
+	}, {
 		key: "showMessage",
 		value: function showMessage(text) {
 			return this.msgBox.show(text);
@@ -119981,12 +120061,21 @@ var Field = function () {
 		value: function step() {
 			var _this5 = this;
 
+			//call onEnter callbacks
+			this.objects.filter(function (o) {
+				return o.justMoved;
+			}).forEach(function (o) {
+				var collidingObjects = _this5.objectsAt(o.position);
+				collidingObjects.forEach(function (o2) {
+					if (o2.onEnter) {
+						o2.onEnter(o);
+					}
+				});
+			});
+
 			var movingObjects = this.objects.filter(function (o) {
 				return o.moving;
 			});
-			if (!movingObjects.length) {
-				return false;
-			}
 			movingObjects.forEach(function (o) {
 				return o.plan();
 			});
@@ -120004,10 +120093,8 @@ var Field = function () {
 				return !bumpingIntoWalls.includes(o);
 			});
 			bumpingIntoWalls.forEach(function (o) {
-				return o.bump();
+				return o.setCommand("bump");
 			});
-
-			var movedObjects = [];
 
 			var _loop = function _loop() {
 				var stack = [movingObjects[0]];
@@ -120043,12 +120130,11 @@ var Field = function () {
 				}
 				if (canMove) {
 					stack.forEach(function (o) {
-						o.move();
-						movedObjects.push(o);
+						return o.setCommand("move");
 					});
 				} else {
 					stack.forEach(function (o) {
-						return o.bump();
+						return o.setCommand("bump");
 					});
 				}
 				movingObjects = movingObjects.filter(function (o) {
@@ -120059,19 +120145,22 @@ var Field = function () {
 			while (movingObjects.length) {
 				_loop();
 			}
-			movedObjects.forEach(function (o) {
-				var collidingObjects = _this5.objectsAt(o.position);
-				var solidObjects = collidingObjects.filter(function (o) {
-					return o.body == "solid";
+			return this.execute();
+		}
+	}, {
+		key: "execute",
+		value: function execute() {
+			var allObjects = [].concat(_toConsumableArray(this.objects), _toConsumableArray(this.removedObjects));
+			if (allObjects.some(function (o) {
+				return o.command;
+			})) {
+				allObjects.forEach(function (o) {
+					return o.execute();
 				});
-				if (solidObjects.length > 1) {
-					throw new Error("Unhandled collision");
-				}
-				collidingObjects.forEach(function (o2) {
-					o2.onEnter && o2.onEnter(o);
-				});
-			});
-			return true;
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}, {
 		key: "process",
@@ -120083,33 +120172,34 @@ var Field = function () {
 						switch (_context.prev = _context.next) {
 							case 0:
 								this.processInput(false);
+								this.history.push(this.getLevelData());
 								i = 42;
 
 								while (this.step() && i--) {}
-								_context.next = 5;
+								_context.next = 6;
 								return Promise.all(this.objects.concat(this.removedObjects).map(function (o) {
 									return o.play();
 								}));
 
-							case 5:
+							case 6:
 								this.removedObjects.forEach(function (o) {
 									return o.destroy();
 								});
 								this.removedObjects = [];
 								this.processInput(true);
 
-								if (!this.winFlag) {
-									_context.next = 12;
+								if (!this.checkWinCondition()) {
+									_context.next = 13;
 									break;
 								}
 
-								_context.next = 11;
+								_context.next = 12;
 								return this.showMessage("You win!");
 
-							case 11:
+							case 12:
 								this.cb();
 
-							case 12:
+							case 13:
 							case "end":
 								return _context.stop();
 						}
@@ -120139,9 +120229,11 @@ var Field = function () {
 			});
 		}
 	}, {
-		key: "win",
-		value: function win() {
-			this.winFlag = true;
+		key: "checkWinCondition",
+		value: function checkWinCondition() {
+			return !this.objects.some(function (o) {
+				return o.type == "omega";
+			});
 		}
 	}]);
 

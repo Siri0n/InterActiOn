@@ -22,8 +22,8 @@ class Omega extends GameObject{
 	}
 	onEnter(o){
 		if(o.type == "alpha"){
-			o.disappear();
-			this.field.win();
+			o.setCommand("disappear");
+			this.setCommand("disappear");
 		}
 	}
 }

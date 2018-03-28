@@ -23,8 +23,12 @@ class LevelState extends Phaser.State{
 			game.world, 
 			[
 				{
+					key: "undo",
+					cb: () => field.undo()
+				},
+				{
 					key: "restart",
-					cb: () => this.main.restart(this.levelData, this.success, this.cancel)
+					cb: () => field.restart()
 				},
 				{
 					key: "cancel",
@@ -39,24 +43,6 @@ class LevelState extends Phaser.State{
 			this.main.params.sidebarOuterSize
 		);
 	}
-/*	preload(game){
-		game.load.image("tile", "resources/tile.png");
-
-		game.load.image("wall", "resources/wall.png");
-
-		game.load.spritesheet("shape", "resources/shape.png", 128, 128);
-		game.load.image("alpha", "resources/alpha.png");
-		game.load.image("omega", "resources/omega.png");
-		game.load.image("plus", "resources/plus.png");
-		game.load.spritesheet("power", "resources/power_.png", 128, 128);
-
-		game.load.image("msg-bg", "resources/msg-bg.png");
-		game.load.spritesheet("restart", "resources/restart.png", 128, 128);
-		game.load.spritesheet("cancel", "resources/cancel.png", 128, 128);
-		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
-
-	}*/
-
 }
 
 const s = 48;
@@ -66,6 +52,8 @@ class Field{
 	constructor(game, parentGroup, rect, audio, data, cb){
 		this.game = game;
 		this.data = data;
+		this.s = s;
+		this.audio = audio;
 		this.cb = cb;
 
 		this.UP = new Point(0, 1);
@@ -84,6 +72,10 @@ class Field{
 
 		this.tilesGroup = game.add.group(this.g);
 		this.tiles = [];
+
+		this.width = data.width;
+		this.height = data.height;
+
 		for(let x = 0; x < data.width; x++){
 			for(let y = 0; y < data.height; y++){
 				this.tiles.push(new Tile(game, this.tilesGroup, s, {x, y}));
@@ -97,17 +89,32 @@ class Field{
 		this.objects = [];
 		this.walls = [];
 		this.removedObjects = [];
-		
-		this.winFlag = false;
 
+		this.populate(data);
+
+		this.history = [];
+
+		this.msgBox = new MsgBox(
+			game, 
+			parentGroup, 
+			new Phaser.Rectangle(
+				rect.x + rect.width/4,
+				rect.y + rect.height/4,
+				rect.width/2,
+				rect.height/2
+			)
+		);		
+	}
+
+	populate(data){
 		data.objects.forEach(objectData => {
 			var O = objectConstructors[objectData.type];
 			var obj = new O(
 				{
-					game, 
-					group: game.world,
-					s,
-					audio
+					game: this.game, 
+					group: this.game.world,
+					s: this.s,
+					audio: this.audio
 				}, 
 				objectData,
 				this
@@ -127,19 +134,40 @@ class Field{
 				this.objects.push(obj);
 			}
 		});
-
-		this.msgBox = new MsgBox(
-			game, 
-			parentGroup, 
-			new Phaser.Rectangle(
-				rect.x + rect.width/4,
-				rect.y + rect.height/4,
-				rect.width/2,
-				rect.height/2
-			)
-		);		
 	}
+	undo(n){
+		console.log(this.history);
+		if(!this.history.length){
+			return;
+		}
+		n = n || 1;
+		n = Math.min(n, this.history.length);
+		var data;
+		while(n--){
+			data = this.history.pop();
+		}
 
+		this.objects.forEach(o => o.destroy());
+		this.objects = [];
+		this.walls.forEach(w => w.destroy());
+		this.walls = [];
+
+		this.populate(data);
+	}
+	restart(){
+		this.undo(this.history.length);
+	}
+	getLevelData(){
+		var result = {
+			width: this.width,
+			height: this.height
+		};
+		result.objects = [
+			...this.objects,
+			...this.walls
+		].map(o => o.plainObject());
+		return result;
+	}
 	showMessage(text){
 		return this.msgBox.show(text);
 	}
@@ -182,10 +210,17 @@ class Field{
 	}
 
 	step(){
+		//call onEnter callbacks
+		this.objects.filter(o => o.justMoved).forEach(o => {
+			var collidingObjects = this.objectsAt(o.position);
+			collidingObjects.forEach(o2 => {
+				if(o2.onEnter){
+					o2.onEnter(o);
+				}
+			});
+		});
+
 		var movingObjects = this.objects.filter(o => o.moving);
-		if(!movingObjects.length){
-			return false;
-		}
 		movingObjects.forEach(o => o.plan());
 
 		//detect wall collision
@@ -198,9 +233,8 @@ class Field{
 		});
 
 		movingObjects = movingObjects.filter(o => !bumpingIntoWalls.includes(o));
-		bumpingIntoWalls.forEach(o => o.bump());
+		bumpingIntoWalls.forEach(o => o.setCommand("bump"));
 
-		var movedObjects = [];
 		while(movingObjects.length){
 			let stack = [movingObjects[0]];
 			let canMove = false;
@@ -231,38 +265,35 @@ class Field{
 				stack.unshift(o);
 			}
 			if(canMove){
-				stack.forEach(o => {
-					o.move();
-					movedObjects.push(o);
-
-				});
+				stack.forEach(o => o.setCommand("move"));
 			}else{
-				stack.forEach(o => o.bump());
+				stack.forEach(o => o.setCommand("bump"));
 			}
 			movingObjects = movingObjects.filter(o => !stack.includes(o));
 		}
-		movedObjects.forEach(o => {
-			var collidingObjects = this.objectsAt(o.position);
-			var solidObjects = collidingObjects.filter(o => o.body == "solid");
-			if(solidObjects.length > 1){
-				throw new Error("Unhandled collision");
-			}
-			collidingObjects.forEach(o2 => {
-				o2.onEnter && o2.onEnter(o);
-			});
-		});
-		return true;
+		return this.execute();
+	}
+
+	execute(){
+		var allObjects = [...this.objects, ...this.removedObjects];
+		if(allObjects.some(o => o.command)){
+			allObjects.forEach(o => o.execute());
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 	async process(){
 		this.processInput(false);
+		this.history.push(this.getLevelData());
 		var i = 42;
 		while(this.step() && i--){}
 		await Promise.all(this.objects.concat(this.removedObjects).map(o => o.play()));
 		this.removedObjects.forEach(o => o.destroy());
 		this.removedObjects = [];
 		this.processInput(true);
-		if(this.winFlag){
+		if(this.checkWinCondition()){
 			await this.showMessage("You win!");
 			this.cb();
 		}
@@ -276,8 +307,8 @@ class Field{
 	processInput(active){
 		this.objects.forEach(o => o.onClick && (o.onClick.active = active));
 	}
-	win(){
-		this.winFlag = true;
+	checkWinCondition(){
+		return !this.objects.some(o => o.type == "omega");
 	}
 }
 

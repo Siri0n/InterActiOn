@@ -8,6 +8,12 @@ function removeConsequentBumps(commands){
 	}
 }
 
+function removeTrailingWaits(commands){
+	while(commands.length && commands[commands.length - 1].type == "wait"){
+		commands.pop();
+	}
+}
+
 const TIME_UNIT = 500;
 
 class ImageGraphics{
@@ -62,12 +68,19 @@ class ImageGraphics{
 		});
 	}
 
+	wait(){
+		this.commands.push({
+			type: "wait"
+		});
+	}
+
 	destroy(){
 		this.g.destroy();
 	}
 
 	async play(){
 		removeConsequentBumps(this.commands);
+		removeTrailingWaits(this.commands);
 		while(this.commands.length){
 			await this.execute(this.commands.shift());
 		}

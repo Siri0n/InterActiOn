@@ -343,6 +343,9 @@ class EditorField{
 			this.tilesGroup.ignoreChildInput = true;
 		}
 		this.objects.forEach(o => o.inputEnabled(o.body == body));
+		this.solidGroup.alpha = (body == "solid" ? 1 : 0.5);
+		this.floorGroup.alpha = (body == "floor" ? 1 : 0.5);
+		this.wallGroup.alpha = (body == "wall" ? 1 : 0.5);
 	}
 }
 

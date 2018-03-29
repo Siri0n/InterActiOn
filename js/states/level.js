@@ -233,7 +233,7 @@ class Field{
 		});
 
 		movingObjects = movingObjects.filter(o => !bumpingIntoWalls.includes(o));
-		bumpingIntoWalls.forEach(o => o.setCommand("bump"));
+		bumpingIntoWalls.forEach(o => o.bump());
 
 		while(movingObjects.length){
 			let stack = [movingObjects[0]];
@@ -267,7 +267,7 @@ class Field{
 			if(canMove){
 				stack.forEach(o => o.setCommand("move"));
 			}else{
-				stack.forEach(o => o.setCommand("bump"));
+				stack.forEach(o => o.bump());
 			}
 			movingObjects = movingObjects.filter(o => !stack.includes(o));
 		}

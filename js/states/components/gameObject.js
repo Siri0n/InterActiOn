@@ -10,10 +10,15 @@ class GameObject{
 	get moving(){
 		return !this.immobile && !this.momentum.equals(NULL);
 	}
-	setCommand(command, override){
-		if(!this.command || override){
-			this.command = command;
-		}
+	setCommand(command){
+		this.command = command;
+	}
+	plan(){
+		this.moving && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
+	}
+	bump(){
+		this.setCommand("bump");
+		this.nextPosition = this.position;
 	}
 	execute(){
 		//reset temporary data
@@ -24,9 +29,6 @@ class GameObject{
 	}
 	_activate(){
 		this.g.activate();
-	}
-	plan(){
-		this.moving && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
 	}
 	_move(){
 		var push = Point.normalize(this.momentum);

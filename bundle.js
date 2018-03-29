@@ -1964,10 +1964,19 @@ var GameObject = function () {
 
 	_createClass(GameObject, [{
 		key: "setCommand",
-		value: function setCommand(command, override) {
-			if (!this.command || override) {
-				this.command = command;
-			}
+		value: function setCommand(command) {
+			this.command = command;
+		}
+	}, {
+		key: "plan",
+		value: function plan() {
+			this.moving && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
+		}
+	}, {
+		key: "bump",
+		value: function bump() {
+			this.setCommand("bump");
+			this.nextPosition = this.position;
 		}
 	}, {
 		key: "execute",
@@ -1982,11 +1991,6 @@ var GameObject = function () {
 		key: "_activate",
 		value: function _activate() {
 			this.g.activate();
-		}
-	}, {
-		key: "plan",
-		value: function plan() {
-			this.moving && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
 		}
 	}, {
 		key: "_move",
@@ -3108,6 +3112,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var Point = Phaser.Point;
+
 function removeConsequentBumps(commands) {
 	for (var i = 0; i < commands.length; i++) {
 		var c = commands[i];
@@ -3124,7 +3130,87 @@ function removeTrailingWaits(commands) {
 	}
 }
 
+function realisticMove(commands) {
+	for (var i = 0; i < commands.length; i++) {
+		var c = commands[i];
+		var n = commands[i + 1];
+		if (c.type == "move" && n && n.type == "move") {
+			if (!c.shift.cross(n.shift)) {
+				c.shift = Point.add(c.shift, n.shift);
+				commands.splice(i + 1, 1);
+				i--;
+			}
+		}
+	}
+}
+
+function moveBump(commands) {
+	for (var i = 0; i < commands.length; i++) {
+		var c = commands[i];
+		var n = commands[i + 1];
+		if (c.type == "move" && n && n.type == "bump") {
+			if (!c.shift.cross(n.shift)) {
+				c.type = "moveBump";
+				commands.splice(i + 1, 1);
+				i--;
+			}
+		}
+	}
+}
+
 var TIME_UNIT = 500;
+
+function wait(time, cb) {
+	return function () {
+		return setInterval(cb, time);
+	}; //for now
+}
+
+var commandHandlers = {
+	move: function move(resolve, command, ctx) {
+		ctx.game.add.tween(ctx.g).to({
+			x: ctx.g.x + command.shift.x * ctx.s,
+			y: ctx.g.y + command.shift.y * ctx.s
+		}, TIME_UNIT * command.shift.getMagnitude(), Phaser.Easing.Quadratic.InOut, true).onComplete.addOnce(resolve);
+	},
+	moveBump: function moveBump(resolve, command, ctx) {
+		var BUMP_FORWARD_TIME = TIME_UNIT * 0.1;
+		var BUMP_BACK_TIME = TIME_UNIT * 0.3;
+		var WAIT_TIME = TIME_UNIT - BUMP_FORWARD_TIME - BUMP_BACK_TIME;
+		var delta = Point.normalize(command.shift).multiply(0.1, 0.1);
+		var shift = Point.add(command.shift, delta);
+		var forward = ctx.game.add.tween(ctx.g).to({
+			x: ctx.g.x + shift.x * ctx.s,
+			y: ctx.g.y + shift.y * ctx.s
+		}, TIME_UNIT * command.shift.getMagnitude() + BUMP_FORWARD_TIME, Phaser.Easing.Quadratic.In, true);
+		var back = ctx.game.add.tween(ctx.g).to({
+			x: ctx.g.x + command.shift.x * ctx.s,
+			y: ctx.g.y + command.shift.y * ctx.s
+		}, BUMP_BACK_TIME, Phaser.Easing.Quadratic.Out);
+		back.onComplete.addOnce(wait(WAIT_TIME, resolve));
+		forward.chain(back);
+	},
+	bump: function bump(resolve, command, ctx) {
+		ctx.game.add.tween(ctx.g).to({
+			x: ctx.g.x + command.shift.x * ctx.s / 8,
+			y: ctx.g.y + command.shift.y * ctx.s / 8
+		}, TIME_UNIT / 2, Phaser.Easing.Quadratic.InOut, true, 0, 0, true).onComplete.addOnce(resolve);
+	},
+	wait: function wait(resolve, command, ctx) {
+		ctx.game.add.tween(ctx.g).to({}, TIME_UNIT, Phaser.Easing.Linear.None, true).onComplete.addOnce(resolve);
+	},
+	fade: function fade(resolve, command, ctx) {
+		ctx.game.add.tween(ctx.g).to({
+			alpha: 0
+		}, TIME_UNIT, Phaser.Easing.Linear.None, true).onComplete.addOnce(resolve);
+	},
+	activate: function activate(resolve, command, ctx) {
+		ctx.game.add.tween(ctx.g.scale).to({
+			x: 1.1,
+			y: 1.1
+		}, TIME_UNIT / 2, Phaser.Easing.Quadratic.InOut, true, 0, 0, true).onComplete.addOnce(resolve);
+	}
+};
 
 var ImageGraphics = function () {
 	function ImageGraphics(key, _ref, _ref2) {
@@ -3215,21 +3301,23 @@ var ImageGraphics = function () {
 							case 0:
 								removeConsequentBumps(this.commands);
 								removeTrailingWaits(this.commands);
+								realisticMove(this.commands);
+								moveBump(this.commands);
 
-							case 2:
+							case 4:
 								if (!this.commands.length) {
-									_context.next = 7;
+									_context.next = 9;
 									break;
 								}
 
-								_context.next = 5;
+								_context.next = 7;
 								return this.execute(this.commands.shift());
 
-							case 5:
-								_context.next = 2;
+							case 7:
+								_context.next = 4;
 								break;
 
-							case 7:
+							case 9:
 							case "end":
 								return _context.stop();
 						}
@@ -3251,38 +3339,10 @@ var ImageGraphics = function () {
 			if (command.sound) {
 				this.audio.playSound(command.sound);
 			}
-			if (command.type == "move") {
-				return new Promise(function (resolve, reject) {
-					_this.game.add.tween(_this.g).to({
-						x: _this.g.x + command.shift.x * _this.s,
-						y: _this.g.y + command.shift.y * _this.s
-					}, TIME_UNIT, Phaser.Easing.Quadratic.InOut, true).onComplete.addOnce(resolve);
-				});
-			} else if (command.type == "bump") {
-				return new Promise(function (resolve, reject) {
-					_this.game.add.tween(_this.g).to({
-						x: _this.g.x + command.shift.x * _this.s / 8,
-						y: _this.g.y + command.shift.y * _this.s / 8
-					}, TIME_UNIT / 2, Phaser.Easing.Quadratic.InOut, true, 0, 0, true).onComplete.addOnce(resolve);
-				});
-			} else if (command.type == "wait") {
-				return new Promise(function (resolve, reject) {
-					_this.game.add.tween(_this.g).to({}, TIME_UNIT, Phaser.Easing.Linear.None, true).onComplete.addOnce(resolve);
-				});
-			} else if (command.type == "fade") {
-				return new Promise(function (resolve, reject) {
-					_this.game.add.tween(_this.g).to({
-						alpha: 0
-					}, TIME_UNIT, Phaser.Easing.Linear.None, true).onComplete.addOnce(resolve);
-				});
-			} else if (command.type == "activate") {
-				return new Promise(function (resolve, reject) {
-					_this.game.add.tween(_this.g.scale).to({
-						x: 1.1,
-						y: 1.1
-					}, TIME_UNIT / 2, Phaser.Easing.Quadratic.InOut, true, 0, 0, true).onComplete.addOnce(resolve);
-				});
-			}
+			var commandHandler = commandHandlers[command.type];
+			return new Promise(function (resolve, reject) {
+				return commandHandler(resolve, command, _this);
+			});
 		}
 	}, {
 		key: "transfer",
@@ -120096,7 +120156,7 @@ var Field = function () {
 				return !bumpingIntoWalls.includes(o);
 			});
 			bumpingIntoWalls.forEach(function (o) {
-				return o.setCommand("bump");
+				return o.bump();
 			});
 
 			var _loop = function _loop() {
@@ -120137,7 +120197,7 @@ var Field = function () {
 					});
 				} else {
 					stack.forEach(function (o) {
-						return o.setCommand("bump");
+						return o.bump();
 					});
 				}
 				movingObjects = movingObjects.filter(function (o) {

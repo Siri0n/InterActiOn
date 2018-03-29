@@ -2100,7 +2100,7 @@ var GameObject = function () {
 	}, {
 		key: "moving",
 		get: function get() {
-			return !this.immobile && !this.momentum.equals(NULL);
+			return !this.immobile && !this.momentum.equals(NULL) && !this.willMoveAway; // 'cause if we have other command, we shouldn't participate in standard moving algorithm 
 		}
 	}]);
 
@@ -119462,8 +119462,8 @@ var Omega = function (_GameObject) {
 		key: "onEnter",
 		value: function onEnter(o) {
 			if (o.type == "alpha") {
-				o.setCommand("disappear");
-				this.setCommand("disappear");
+				o.disappear();
+				this.disappear();
 			}
 		}
 	}]);

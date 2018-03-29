@@ -8,7 +8,8 @@ class GameObject{
 		this.command = null;
 	}
 	get moving(){
-		return !this.immobile && !this.momentum.equals(NULL);
+		return !this.immobile && !this.momentum.equals(NULL) 
+		&& !this.willMoveAway; // 'cause if we have other command, we shouldn't participate in standard moving algorithm 
 	}
 	setCommand(command){
 		this.command = command;

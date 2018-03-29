@@ -22,7 +22,7 @@ class Main{
 	}
 	loadLevels(levels){
 		this.levels = levels;
-		this.audio = new Audio(this.game, ["pusch", "fade"], ["bgm"]);
+		this.audio = new Audio(this.game, ["pusch", "fade", "bump"], ["bgm"]);
 		this.audio.playMusic("bgm");
 		this.audio.soundOn = this.playerData.getBoolean("sound", true);
 		this.audio.musicOn = this.playerData.getBoolean("music", true);

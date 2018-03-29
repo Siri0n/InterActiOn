@@ -1973,16 +1973,29 @@ var GameObject = function () {
 			this.moving && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
 		}
 	}, {
+		key: "move",
+		value: function move() {
+			this.setCommand("move");
+			this.willMoveAway = true;
+		}
+	}, {
 		key: "bump",
 		value: function bump() {
 			this.setCommand("bump");
 			this.nextPosition = this.position;
 		}
 	}, {
+		key: "disappear",
+		value: function disappear() {
+			this.setCommand("disappear");
+			this.willMoveAway = true;
+		}
+	}, {
 		key: "execute",
 		value: function execute() {
 			//reset temporary data
 			this.justMoved = false;
+			this.willMoveAway = false;
 			var command = this.command || "wait";
 			this.command = null;
 			this["_" + command]();
@@ -3151,6 +3164,7 @@ function moveBump(commands) {
 		if (c.type == "move" && n && n.type == "bump") {
 			if (!c.shift.cross(n.shift)) {
 				c.type = "moveBump";
+				c.sound = n.sound;
 				commands.splice(i + 1, 1);
 				i--;
 			}
@@ -3160,7 +3174,7 @@ function moveBump(commands) {
 
 var TIME_UNIT = 500;
 
-function wait(time, cb) {
+function _wait(time, cb) {
 	return function () {
 		return setInterval(cb, time);
 	}; //for now
@@ -3177,34 +3191,41 @@ var commandHandlers = {
 		var BUMP_FORWARD_TIME = TIME_UNIT * 0.1;
 		var BUMP_BACK_TIME = TIME_UNIT * 0.3;
 		var WAIT_TIME = TIME_UNIT - BUMP_FORWARD_TIME - BUMP_BACK_TIME;
+
 		var delta = Point.normalize(command.shift).multiply(0.1, 0.1);
 		var shift = Point.add(command.shift, delta);
 		var forward = ctx.game.add.tween(ctx.g).to({
 			x: ctx.g.x + shift.x * ctx.s,
 			y: ctx.g.y + shift.y * ctx.s
 		}, TIME_UNIT * command.shift.getMagnitude() + BUMP_FORWARD_TIME, Phaser.Easing.Quadratic.In, true);
+		forward.onComplete.addOnce(function () {
+			return ctx.audio.playSound(command.sound);
+		});
 		var back = ctx.game.add.tween(ctx.g).to({
 			x: ctx.g.x + command.shift.x * ctx.s,
 			y: ctx.g.y + command.shift.y * ctx.s
 		}, BUMP_BACK_TIME, Phaser.Easing.Quadratic.Out);
-		back.onComplete.addOnce(wait(WAIT_TIME, resolve));
+		back.onComplete.addOnce(_wait(WAIT_TIME, resolve));
 		forward.chain(back);
 	},
 	bump: function bump(resolve, command, ctx) {
+		ctx.audio.playSound(command.sound);
 		ctx.game.add.tween(ctx.g).to({
 			x: ctx.g.x + command.shift.x * ctx.s / 8,
 			y: ctx.g.y + command.shift.y * ctx.s / 8
 		}, TIME_UNIT / 2, Phaser.Easing.Quadratic.InOut, true, 0, 0, true).onComplete.addOnce(resolve);
 	},
 	wait: function wait(resolve, command, ctx) {
-		ctx.game.add.tween(ctx.g).to({}, TIME_UNIT, Phaser.Easing.Linear.None, true).onComplete.addOnce(resolve);
+		_wait(TIME_UNIT, resolve)();
 	},
 	fade: function fade(resolve, command, ctx) {
+		ctx.audio.playSound(command.sound);
 		ctx.game.add.tween(ctx.g).to({
 			alpha: 0
 		}, TIME_UNIT, Phaser.Easing.Linear.None, true).onComplete.addOnce(resolve);
 	},
 	activate: function activate(resolve, command, ctx) {
+		ctx.audio.playSound(command.sound);
 		ctx.game.add.tween(ctx.g.scale).to({
 			x: 1.1,
 			y: 1.1
@@ -3268,7 +3289,8 @@ var ImageGraphics = function () {
 		value: function bump(p) {
 			this.commands.push({
 				type: "bump",
-				shift: p
+				shift: p,
+				sound: "bump"
 			});
 		}
 	}, {
@@ -3336,9 +3358,6 @@ var ImageGraphics = function () {
 		value: function execute(command) {
 			var _this = this;
 
-			if (command.sound) {
-				this.audio.playSound(command.sound);
-			}
 			var commandHandler = commandHandlers[command.type];
 			return new Promise(function (resolve, reject) {
 				return commandHandler(resolve, command, _this);
@@ -117999,7 +118018,7 @@ var Main = function () {
 		key: "loadLevels",
 		value: function loadLevels(levels) {
 			this.levels = levels;
-			this.audio = new Audio(this.game, ["pusch", "fade"], ["bgm"]);
+			this.audio = new Audio(this.game, ["pusch", "fade", "bump"], ["bgm"]);
 			this.audio.playMusic("bgm");
 			this.audio.soundOn = this.playerData.getBoolean("sound", true);
 			this.audio.musicOn = this.playerData.getBoolean("music", true);
@@ -118487,6 +118506,7 @@ var PreloadState = function (_Phaser$State) {
 			game.load.audio("bgm", "sound/bgm-test.mp3", true);
 			game.load.audio("pusch", "sound/pusch.wav", true);
 			game.load.audio("fade", "sound/fade.wav", true);
+			game.load.audio("bump", "sound/bump.wav", true);
 		}
 	}]);
 
@@ -119861,6 +119881,8 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _msgBox = __webpack_require__(358);
@@ -119937,6 +119959,52 @@ var LevelState = function (_Phaser$State) {
 
 var s = 48;
 var Point = Phaser.Point;
+
+function deepEqual(o1, o2) {
+	//plain objects only
+	if ((typeof o1 === "undefined" ? "undefined" : _typeof(o1)) != (typeof o2 === "undefined" ? "undefined" : _typeof(o2))) {
+		return false;
+	}
+	var result = true;
+	if ((typeof o1 === "undefined" ? "undefined" : _typeof(o1)) == "object") {
+		var o2keys = Object.keys(o2);
+		var _iteratorNormalCompletion = true;
+		var _didIteratorError = false;
+		var _iteratorError = undefined;
+
+		try {
+			for (var _iterator = Object.keys(o1)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+				var key = _step.value;
+
+				var i = o2keys.indexOf(key);
+				if (i == -1) {
+					return false;
+				}
+				o2keys.splice(i, 1);
+				if (!deepEqual(o1[key], o2[key])) {
+					return false;
+				}
+			}
+		} catch (err) {
+			_didIteratorError = true;
+			_iteratorError = err;
+		} finally {
+			try {
+				if (!_iteratorNormalCompletion && _iterator.return) {
+					_iterator.return();
+				}
+			} finally {
+				if (_didIteratorError) {
+					throw _iteratorError;
+				}
+			}
+		}
+
+		return !o2keys.length;
+	} else {
+		return o1 == o2;
+	}
+}
 
 var Field = function () {
 	function Field(game, parentGroup, rect, audio, data, cb) {
@@ -120020,16 +120088,9 @@ var Field = function () {
 		}
 	}, {
 		key: "undo",
-		value: function undo(n) {
-			console.log(this.history);
+		value: function undo() {
 			if (!this.history.length) {
 				return;
-			}
-			n = n || 1;
-			n = Math.min(n, this.history.length);
-			var data;
-			while (n--) {
-				data = this.history.pop();
 			}
 
 			this.objects.forEach(function (o) {
@@ -120041,12 +120102,25 @@ var Field = function () {
 			});
 			this.walls = [];
 
-			this.populate(data);
+			this.populate(this.history.pop());
 		}
 	}, {
 		key: "restart",
 		value: function restart() {
-			this.undo(this.history.length);
+			if (!this.history.length) {
+				return;
+			}
+			this.objects.forEach(function (o) {
+				return o.destroy();
+			});
+			this.objects = [];
+			this.walls.forEach(function (w) {
+				return w.destroy();
+			});
+			this.walls = [];
+
+			this.populate(this.history[0]);
+			this.history = [];
 		}
 	}, {
 		key: "getLevelData",
@@ -120179,21 +120253,18 @@ var Field = function () {
 						throw new Error("Unhandled collision");
 					}
 					var o = objs[0];
-					if (!o) {
+					if (!o || o.willMoveAway) {
 						canMove = true;
 						break;
 					}
-					if (!o.nextPosition) {
-						break;
-					}
-					if (stack.includes(o)) {
+					if (!o.nextPosition || stack.includes(o)) {
 						break;
 					}
 					stack.unshift(o);
 				}
 				if (canMove) {
 					stack.forEach(function (o) {
-						return o.setCommand("move");
+						return o.move();
 					});
 				} else {
 					stack.forEach(function (o) {
@@ -120229,13 +120300,13 @@ var Field = function () {
 		key: "process",
 		value: function () {
 			var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-				var i;
+				var data, i, newData;
 				return regeneratorRuntime.wrap(function _callee$(_context) {
 					while (1) {
 						switch (_context.prev = _context.next) {
 							case 0:
 								this.processInput(false);
-								this.history.push(this.getLevelData());
+								data = this.getLevelData();
 								i = 42;
 
 								while (this.step() && i--) {}
@@ -120249,20 +120320,27 @@ var Field = function () {
 									return o.destroy();
 								});
 								this.removedObjects = [];
-								this.processInput(true);
 
 								if (!this.checkWinCondition()) {
-									_context.next = 13;
+									_context.next = 12;
 									break;
 								}
 
-								_context.next = 12;
+								_context.next = 11;
 								return this.showMessage("You win!");
 
-							case 12:
+							case 11:
 								this.cb();
 
-							case 13:
+							case 12:
+								newData = this.getLevelData();
+
+								if (!deepEqual(data, newData)) {
+									this.history.push(data);
+								}
+								this.processInput(true);
+
+							case 15:
 							case "end":
 								return _context.stop();
 						}

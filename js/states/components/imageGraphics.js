@@ -36,7 +36,8 @@ function moveBump(commands){
 		let n = commands[i + 1];
 		if(c.type == "move" && n && n.type == "bump"){
 			if(!c.shift.cross(n.shift)){
-				c.type = "moveBump"
+				c.type = "moveBump";
+				c.sound = n.sound;
 				commands.splice(i + 1, 1);
 				i--;
 			}
@@ -68,6 +69,7 @@ const commandHandlers = {
 		const BUMP_FORWARD_TIME = TIME_UNIT*0.1;
 		const BUMP_BACK_TIME = TIME_UNIT*0.3;
 		const WAIT_TIME = TIME_UNIT - BUMP_FORWARD_TIME - BUMP_BACK_TIME;
+
 		var delta = Point.normalize(command.shift).multiply(0.1, 0.1);
 		var shift = Point.add(command.shift, delta);
 		var forward = ctx.game.add.tween(ctx.g)
@@ -80,6 +82,7 @@ const commandHandlers = {
 			Phaser.Easing.Quadratic.In,
 			true
 		)
+		forward.onComplete.addOnce(() => ctx.audio.playSound(command.sound));
 		var back = ctx.game.add.tween(ctx.g)
 		.to(
 			{
@@ -95,6 +98,7 @@ const commandHandlers = {
 		forward.chain(back);
 	},
 	bump(resolve, command, ctx){
+		ctx.audio.playSound(command.sound);
 		ctx.game.add.tween(ctx.g)
 		.to(
 			{
@@ -108,16 +112,10 @@ const commandHandlers = {
 		.onComplete.addOnce(resolve);
 	},
 	wait(resolve, command, ctx){
-		ctx.game.add.tween(ctx.g)
-		.to(
-			{},
-			TIME_UNIT,
-			Phaser.Easing.Linear.None,
-			true
-		)
-		.onComplete.addOnce(resolve);
+		wait(TIME_UNIT, resolve)();
 	},
 	fade(resolve, command, ctx){
+		ctx.audio.playSound(command.sound);
 		ctx.game.add.tween(ctx.g)
 		.to(
 			{
@@ -130,6 +128,7 @@ const commandHandlers = {
 		.onComplete.addOnce(resolve);
 	},
 	activate(resolve, command, ctx){
+		ctx.audio.playSound(command.sound);
 		ctx.game.add.tween(ctx.g.scale)
 		.to(
 			{
@@ -185,7 +184,8 @@ class ImageGraphics{
 	bump(p){
 		this.commands.push({
 			type: "bump",
-			shift: p
+			shift: p,
+			sound: "bump"
 		});
 	}
 
@@ -217,9 +217,6 @@ class ImageGraphics{
 	}
 
 	execute(command){
-		if(command.sound){
-			this.audio.playSound(command.sound);
-		}
 		var commandHandler = commandHandlers[command.type];
 		return new Promise((resolve, reject) => commandHandler(resolve, command, this));
 	}

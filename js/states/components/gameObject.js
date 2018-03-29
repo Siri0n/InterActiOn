@@ -16,13 +16,22 @@ class GameObject{
 	plan(){
 		this.moving && (this.nextPosition = Point.add(this.position, Point.normalize(this.momentum)));
 	}
+	move(){
+		this.setCommand("move");
+		this.willMoveAway = true;
+	}
 	bump(){
 		this.setCommand("bump");
 		this.nextPosition = this.position;
 	}
+	disappear(){
+		this.setCommand("disappear");
+		this.willMoveAway = true;
+	}
 	execute(){
 		//reset temporary data
 		this.justMoved = false;
+		this.willMoveAway = false; 
 		var command = this.command || "wait";
 		this.command = null;
 		this["_" + command]();

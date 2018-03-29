@@ -45,6 +45,7 @@ class PreloadState extends Phaser.State{
 		game.load.audio("bgm", "sound/bgm-test.mp3", true);
 		game.load.audio("pusch", "sound/pusch.wav", true);
 		game.load.audio("fade", "sound/fade.wav", true);
+		game.load.audio("bump", "sound/bump.wav", true);
 	}
 }
 

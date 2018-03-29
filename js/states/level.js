@@ -48,6 +48,29 @@ class LevelState extends Phaser.State{
 const s = 48;
 const Point = Phaser.Point;
 
+function deepEqual(o1, o2){ //plain objects only
+	if(typeof o1 != typeof o2){
+		return false;
+	}
+	let result = true;
+	if(typeof o1 == "object"){
+		var o2keys = Object.keys(o2);
+		for(let key of Object.keys(o1)){
+			let i = o2keys.indexOf(key);
+			if(i == -1){
+				return false;
+			}
+			o2keys.splice(i, 1);
+			if(!deepEqual(o1[key], o2[key])){
+				return false;
+			}
+		}
+		return !o2keys.length;
+	}else{
+		return o1 == o2;
+	}
+}
+
 class Field{
 	constructor(game, parentGroup, rect, audio, data, cb){
 		this.game = game;
@@ -135,16 +158,9 @@ class Field{
 			}
 		});
 	}
-	undo(n){
-		console.log(this.history);
+	undo(){
 		if(!this.history.length){
 			return;
-		}
-		n = n || 1;
-		n = Math.min(n, this.history.length);
-		var data;
-		while(n--){
-			data = this.history.pop();
 		}
 
 		this.objects.forEach(o => o.destroy());
@@ -152,10 +168,19 @@ class Field{
 		this.walls.forEach(w => w.destroy());
 		this.walls = [];
 
-		this.populate(data);
+		this.populate(this.history.pop());
 	}
 	restart(){
-		this.undo(this.history.length);
+		if(!this.history.length){
+			return;
+		}
+		this.objects.forEach(o => o.destroy());
+		this.objects = [];
+		this.walls.forEach(w => w.destroy());
+		this.walls = [];
+
+		this.populate(this.history[0]);
+		this.history = [];
 	}
 	getLevelData(){
 		var result = {
@@ -252,20 +277,17 @@ class Field{
 					throw new Error("Unhandled collision");
 				}
 				let o = objs[0];
-				if(!o){
+				if(!o || o.willMoveAway){
 					canMove = true;
 					break;
 				}
-				if(!o.nextPosition){
-					break;
-				}
-				if(stack.includes(o)){
+				if(!o.nextPosition || stack.includes(o)){
 					break;
 				}
 				stack.unshift(o);
 			}
 			if(canMove){
-				stack.forEach(o => o.setCommand("move"));
+				stack.forEach(o => o.move());
 			}else{
 				stack.forEach(o => o.bump());
 			}
@@ -286,17 +308,22 @@ class Field{
 
 	async process(){
 		this.processInput(false);
-		this.history.push(this.getLevelData());
+		var data = this.getLevelData();
+
 		var i = 42;
 		while(this.step() && i--){}
 		await Promise.all(this.objects.concat(this.removedObjects).map(o => o.play()));
 		this.removedObjects.forEach(o => o.destroy());
 		this.removedObjects = [];
-		this.processInput(true);
 		if(this.checkWinCondition()){
 			await this.showMessage("You win!");
 			this.cb();
 		}
+		var newData = this.getLevelData();
+		if(!deepEqual(data, newData)){
+			this.history.push(data);
+		}
+		this.processInput(true);
 	}
 
 	remove(o){

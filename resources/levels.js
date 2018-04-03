@@ -4,5 +4,6 @@ export default [
 	"Power up", "Minus", "Tandem",
 
 	"Spiral", "Arkanoid", "South Cross",
-	"Snake Pass", "Wings"
+	"Snake Pass", "Wings", "Order",
+	"Choose wisely"
 ];

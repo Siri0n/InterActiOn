@@ -2,12 +2,10 @@ import Menu from "./components/menu";
 
 class MenuState extends Phaser.State{
 	init(main){
-		console.log("MenuState.init");
 		this.main = main;
 	}
 	create(game){
-		console.log("MenuState.create");
-		game.stage.backgroundColor = "#4488AA";
+		game.stage.backgroundColor = "#3355ff";
 		var menu = new Menu(game, game.world, this.main.params.menuRect, [
 			{
 				text: this.main.data.nextLevel ? "Continue" : "Play",

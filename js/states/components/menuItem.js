@@ -5,7 +5,10 @@ function MenuItem(game, group, text, cb, style){
 	g.inputEnabled = true;
 	g.events.onInputOver.add(_ => g.scale.x = g.scale.y = 1.2);
 	g.events.onInputOut.add(_ => g.scale.x = g.scale.y = 1);
-	g.events.onInputDown.add(cb);
+	g.events.onInputDown.add(_ => {
+		g.scale.x = g.scale.y = 1;
+		cb()
+	});
 }
 
 export default MenuItem;

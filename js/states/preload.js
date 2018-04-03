@@ -25,6 +25,7 @@ class PreloadState extends Phaser.State{
 		game.load.spritesheet("play", "play.png", 128, 128);
 		//background
 		game.load.image("msg-bg", "msg-bg.png");
+		game.load.image("bg-star", "bg-star.png");
 		//game objects
 		game.load.spritesheet("shape", "shape.png", 128, 128);
 		game.load.spritesheet("power", "power_.png", 128, 128);

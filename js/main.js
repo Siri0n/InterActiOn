@@ -4,6 +4,7 @@ import levelNames from "resources/levels";
 import FileSaver from "file-saver";
 import Container from "./states/components/container";
 import MenuItem from "./states/components/menuItem";
+import Background from "./states/components/background";
 
 class Main{
 	constructor(){
@@ -27,6 +28,7 @@ class Main{
 		this.audio.soundOn = this.playerData.getBoolean("sound", true);
 		this.audio.musicOn = this.playerData.getBoolean("music", true);
 		this.settings = new Settings(this.game, this);
+		this.background = new Background(this.game, this.game.stage, this.params.screen);
 		this.goToMenu();
 	}
 	goToMenu(){
@@ -136,7 +138,6 @@ class Settings{
 		this.game = game;
 		this.g = game.add.group(game.stage);
 		var rect = main.params.screen;
-		this.bg = game.add.tileSprite(rect.x, rect.y, rect.width, rect.height, "msg-bg", 0, this.g);
 		this.menu = new Container(game, this.g, main.params.menuRect, [
 			new MenuItem(game, this.g, "Resume", () => this.close()),
 			new Toggle(game, this.g, "Sounds on", "Sounds off", val => main.setAudio("sound", val), main.audio.soundOn),
@@ -150,9 +151,11 @@ class Settings{
 	}
 	open(){
 		this.g.visible = true;
+		this.game.world.visible = false;
 	}
 	close(){
 		this.g.visible = false;
+		this.game.world.visible = true;
 	}
 }
 

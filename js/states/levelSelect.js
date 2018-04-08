@@ -66,7 +66,7 @@ class LevelSelect{
 		supergroup.align(1, -1, rect.width, rect.height, Phaser.CENTER);
 
 		this.currentScreen = 0;
-		this.maxScreen = Math.floor(levels.length/9);
+		this.maxScreen = Math.ceil(levels.length/9) - 1;
 		this.game = game;
 		this.updateButtons();
 	}

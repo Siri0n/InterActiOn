@@ -32,6 +32,7 @@ class PreloadState extends Phaser.State{
 
 		game.load.image("alpha", "alpha.png");
 		game.load.image("omega", "omega.png");
+		game.load.image("theta", "theta.png");
 		game.load.image("plus", "plus.png");
 		game.load.image("minus", "minus.png");
 		game.load.image("wall", "wall.png");

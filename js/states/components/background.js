@@ -5,7 +5,7 @@ class Background{
 		var layer1 = new BackgroundLayer(game, this.g, rect, 6, 0.5, 0.5);
 		var layer2 = new BackgroundLayer(game, this.g, rect, 5, -0.6, 0.7);
 		var layer3 = new BackgroundLayer(game, this.g, rect, 4, 0.4, -0.8);
-		this.g.alpha = 0.25;
+		this.g.alpha = 0.3;
 	}
 }
 

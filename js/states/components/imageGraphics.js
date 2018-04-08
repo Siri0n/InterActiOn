@@ -45,7 +45,7 @@ function moveBump(commands){
 	}
 }
 
-const TIME_UNIT = 500;
+const TIME_UNIT = 400;
 
 function wait(time, cb){
 	return () => setInterval(cb, time); //for now
@@ -60,7 +60,7 @@ const commandHandlers = {
 				y: ctx.g.y + command.shift.y*ctx.s
 			},
 			TIME_UNIT*command.shift.getMagnitude(),
-			Phaser.Easing.Quadratic.InOut,
+			Phaser.Easing.Linear.None,
 			true
 		)
 		.onComplete.addOnce(resolve);
@@ -79,7 +79,7 @@ const commandHandlers = {
 				y: ctx.g.y + shift.y*ctx.s
 			},
 			TIME_UNIT*command.shift.getMagnitude() + BUMP_FORWARD_TIME,
-			Phaser.Easing.Quadratic.In,
+			Phaser.Easing.Linear.None,
 			true
 		)
 		forward.onComplete.addOnce(() => ctx.audio.playSound(command.sound));

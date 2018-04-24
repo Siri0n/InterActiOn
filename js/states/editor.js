@@ -52,26 +52,6 @@ class EditorState extends Phaser.State{
 		}
 		game.canvas.addEventListener("click", this.fileUploadHack);
 	}
-/*	preload(game){
-		game.load.image("frame", "resources/frame.png");
-
-		game.load.spritesheet("shape", "resources/shape.png", 128, 128);
-		game.load.image("alpha", "resources/alpha.png");
-		game.load.image("omega", "resources/omega.png");
-		game.load.image("plus", "resources/plus.png");
-		game.load.spritesheet("power", "resources/power_.png", 128, 128);
-
-		game.load.image("wall", "resources/wall.png");
-
-		game.load.spritesheet("editor-tile", "resources/editor-tile.png", 128, 128);
-		game.load.spritesheet("editor-tile-wall", "resources/editor-tile-wall.png", 128, 128);
-		//game.load.spritesheet("delete", "resources/delete.png", 128, 128);
-		game.load.spritesheet("triangle", "resources/triangle.png", 64, 64);
-		game.load.spritesheet("load", "resources/load.png", 128, 128);
-		game.load.spritesheet("save", "resources/save.png", 128, 128);
-		game.load.spritesheet("play", "resources/play.png", 128, 128);
-		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
-	}*/
 	shutdown(game){
 		game.canvas.removeEventListener("click", this.fileUploadHack);
 	}
@@ -110,7 +90,7 @@ class Editor{
 			game.world,
 			rect,
 			S,
-			["alpha", "omega", "plus", "minus", "wall"]
+			["alpha", "omega", "theta", "plus", "minus", "wall"]
 		);
 
 		var params = new ParamsEditor(

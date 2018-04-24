@@ -42,7 +42,9 @@ class PreloadState extends Phaser.State{
 		game.load.spritesheet("triangle", "triangle.png", 64, 64);
 		game.load.image("frame", "frame.png");
 		//sound
-		game.load.audio("bgm", "sound/bgm-test.mp3", true);
+		game.load.audio("bgm0", "sound/bgm-test.mp3", true);
+		game.load.audio("bgm1", "sound/bgm.mp3", true);
+		game.load.audio("bgm2", "sound/bgm2.mp3", true);
 		game.load.audio("pusch", "sound/pusch.wav", true);
 		game.load.audio("fade", "sound/fade.wav", true);
 		game.load.audio("bump", "sound/bump.wav", true);

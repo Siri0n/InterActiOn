@@ -22,8 +22,11 @@ class Main{
 	}
 	loadLevels(levels){
 		this.levels = levels;
-		this.audio = new Audio(this.game, ["pusch", "fade", "bump"], ["bgm"]);
-		this.audio.playMusic("bgm");
+		var musicList = ["bgm0", "bgm1", "bgm2"];
+		this.audio = new Audio(this.game, ["pusch", "fade", "bump"], musicList);
+		var playRandom = () => this.audio.playMusic(Phaser.ArrayUtils.getRandomItem(musicList));
+		this.audio.onMusicEnd.add(playRandom);
+		playRandom();
 		this.audio.soundOn = this.playerData.getBoolean("sound", true);
 		this.audio.musicOn = this.playerData.getBoolean("music", true);
 		this.settings = new Settings(this.game, this);
@@ -91,11 +94,12 @@ class Audio{
 			this.sound[name] = sound;
 		});
 		musicNames.forEach(name => {
-			var music = game.add.audio(name, 0.5, true);
+			var music = game.add.audio(name, 0.5);
 			this.music[name] = music;
 		});
 		this.currentMusic = null;
 		this._soundOn = this._musicOn = true;
+		this.onMusicEnd = new Phaser.Signal();
 	}
 	playSound(name){
 		this.sound[name] && this.sound[name].play();
@@ -108,6 +112,7 @@ class Audio{
 		if(newMusic){
 			this.currentMusic = newMusic;
 			newMusic.play();
+			newMusic.onStop.addOnce(() => this.onMusicEnd.dispatch());
 		}
 	}
 	get soundOn(){

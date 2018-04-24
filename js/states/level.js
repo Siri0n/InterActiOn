@@ -14,7 +14,7 @@ class LevelState extends Phaser.State{
 			game, 
 			game.world, 
 			this.main.params.fieldRect,
-			this.main.audio,
+			this.main,
 			this.levelData, 
 			this.success
 		);
@@ -72,11 +72,11 @@ function deepEqual(o1, o2){ //plain objects only
 }
 
 class Field{
-	constructor(game, parentGroup, rect, audio, data, cb){
+	constructor(game, parentGroup, rect, main, data, cb){
 		this.game = game;
 		this.data = data;
 		this.s = s;
-		this.audio = audio;
+		this.main = main;
 		this.cb = cb;
 
 		this.UP = new Point(0, 1);
@@ -137,7 +137,7 @@ class Field{
 					game: this.game, 
 					group: this.game.world,
 					s: this.s,
-					audio: this.audio
+					main: this.main
 				}, 
 				objectData,
 				this

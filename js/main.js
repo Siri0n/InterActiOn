@@ -6,10 +6,17 @@ import Container from "./states/components/container";
 import MenuItem from "./states/components/menuItem";
 import Background from "./states/components/background";
 
+const SPEEDS = {
+	low: 600,
+	medium: 400,
+	high: 200
+}
+
 class Main{
 	constructor(){
 		this.game = createGame();
-		window.test = this.game;
+		window.game = this.game;
+		window.main = this
 		this.params = {
 			sidebarButtonSize: 60,
 			sidebarOuterSize: 64,
@@ -17,6 +24,8 @@ class Main{
 			menuRect: new Phaser.Rectangle(0, this.game.height/4, this.game.width, this.game.height/2)
 		};
 		this.playerData = new PlayerData();
+		this.timeUnit = new ObservableParam();
+		this.gameSpeed = this.playerData.get("gameSpeed", "medium");
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
 		this.data = {nextLevel: 0};
 		this.game.state.start("preload", true, false, this, levelNames);
@@ -83,7 +92,14 @@ class Main{
 		}
 		this.playerData.set(type, value);
 	}
-
+	set gameSpeed(value){
+		this._gameSpeed = value;
+		this.timeUnit.value = SPEEDS[value];
+		this.playerData.set("gameSpeed", value);
+	}
+	get gameSpeed(){
+		return this._gameSpeed;
+	}
 }
 
 class Audio{
@@ -96,7 +112,7 @@ class Audio{
 			this.sound[name] = sound;
 		});
 		musicNames.forEach(name => {
-			var music = game.add.audio(name, 0.5);
+			var music = game.add.audio(name, 0.25);
 			this.music[name] = music;
 		});
 		this.currentMusic = null;
@@ -107,7 +123,7 @@ class Audio{
 		this.sound[name] && this.sound[name].play();
 	}
 	playMusic(name){
-		if(this.currentMusic){
+		if(this.currentMusic && this.currentMusic.isPlaying){
 			this.currentMusic.stop();
 		}
 		var newMusic = this.music[name];
@@ -145,8 +161,40 @@ class Settings{
 		var rect = main.params.screen;
 		this.menu = new Container(game, this.g, main.params.menuRect, [
 			new MenuItem(game, this.g, "Resume", () => this.close()),
-			new Toggle(game, this.g, "Sounds on", "Sounds off", val => main.setAudio("sound", val), main.audio.soundOn),
-			new Toggle(game, this.g, "Music on", "Music off", val => main.setAudio("music", val), main.audio.musicOn),
+			new Toggle(game, this.g, [
+				{
+					value: false,
+					text: "Sounds off"
+				},
+				{
+					value: true,
+					text: "Sounds on"
+				}
+			], val => main.setAudio("sound", val), main.audio.soundOn|0),
+			new Toggle(game, this.g, [
+				{
+					value: false,
+					text: "Music off"
+				},
+				{
+					value: true,
+					text: "Music on"
+				}
+			], val => main.setAudio("music", val), main.audio.musicOn|0),
+			new Toggle(game, this.g, [
+				{
+					value: "low",
+					text: "Game speed: low"
+				},
+				{
+					value: "medium",
+					text: "Game speed: medium"
+				},
+				{
+					value: "high",
+					text: "Game speed: high"
+				}
+			], val => main.gameSpeed = val, {value: main.gameSpeed}),
 			new MenuItem(game, this.g, "Go to main menu", () => {
 				this.close();
 				main.goToMenu();
@@ -165,13 +213,34 @@ class Settings{
 }
 
 class Toggle extends MenuItem{
-	constructor(game, group, trueText, falseText, cb, initialValue){
-		super(game, group, initialValue ? trueText : falseText, () => {
-			this.value = !this.value;
-			this.g.text = this.value ? trueText : falseText;
-			cb(this.value);
+	constructor(game, group, variants, cb, index = 0){
+		if(index.value){
+			index = variants.findIndex(v => v.value == index.value);
+		}
+		super(game, group, variants[index].text, () => {
+			this.index = (this.index + 1) % variants.length;
+			this.g.text = this.variants[this.index].text;
+			console.log("Index = " + this.index + ", value = " + this.variants[this.index].value);
+			cb(this.variants[this.index].value);
 		});
-		this.value = initialValue;
+		this.variants = variants;
+		this.index = index;
 	}
 }
+
+class ObservableParam{
+	constructor(value){
+		this._value = value;
+		this.onChange = new Phaser.Signal();
+	}
+	get value(){
+		return this._value;
+	}
+	set value(value){
+		this._value = value;
+		this.onChange.dispatch(value);
+		return value;
+	}
+}
+
 export default Main;

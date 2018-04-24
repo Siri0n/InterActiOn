@@ -45,8 +45,6 @@ function moveBump(commands){
 	}
 }
 
-const TIME_UNIT = 400;
-
 function wait(time, cb){
 	return () => setInterval(cb, time); //for now
 }
@@ -59,16 +57,16 @@ const commandHandlers = {
 				x: ctx.g.x + command.shift.x*ctx.s, 
 				y: ctx.g.y + command.shift.y*ctx.s
 			},
-			TIME_UNIT*command.shift.getMagnitude(),
+			ctx.timeUnit*command.shift.getMagnitude(),
 			Phaser.Easing.Linear.None,
 			true
 		)
 		.onComplete.addOnce(resolve);
 	},
 	moveBump(resolve, command, ctx){
-		const BUMP_FORWARD_TIME = TIME_UNIT*0.1;
-		const BUMP_BACK_TIME = TIME_UNIT*0.3;
-		const WAIT_TIME = TIME_UNIT - BUMP_FORWARD_TIME - BUMP_BACK_TIME;
+		const BUMP_FORWARD_TIME = ctx.timeUnit*0.1;
+		const BUMP_BACK_TIME = ctx.timeUnit*0.3;
+		const WAIT_TIME = ctx.timeUnit - BUMP_FORWARD_TIME - BUMP_BACK_TIME;
 
 		var delta = Point.normalize(command.shift).multiply(0.1, 0.1);
 		var shift = Point.add(command.shift, delta);
@@ -78,7 +76,7 @@ const commandHandlers = {
 				x: ctx.g.x + shift.x*ctx.s, 
 				y: ctx.g.y + shift.y*ctx.s
 			},
-			TIME_UNIT*command.shift.getMagnitude() + BUMP_FORWARD_TIME,
+			ctx.timeUnit*command.shift.getMagnitude() + BUMP_FORWARD_TIME,
 			Phaser.Easing.Linear.None,
 			true
 		)
@@ -105,14 +103,14 @@ const commandHandlers = {
 				x: ctx.g.x + command.shift.x*ctx.s/8, 
 				y: ctx.g.y + command.shift.y*ctx.s/8
 			},
-			TIME_UNIT/2,
+			ctx.timeUnit/2,
 			Phaser.Easing.Quadratic.InOut,
 			true, 0, 0, true
 		)
 		.onComplete.addOnce(resolve);
 	},
 	wait(resolve, command, ctx){
-		wait(TIME_UNIT, resolve)();
+		wait(ctx.timeUnit, resolve)();
 	},
 	fade(resolve, command, ctx){
 		ctx.audio.playSound(command.sound);
@@ -121,7 +119,7 @@ const commandHandlers = {
 			{
 				alpha: 0 
 			},
-			TIME_UNIT,
+			ctx.timeUnit,
 			Phaser.Easing.Linear.None,
 			true
 		)
@@ -135,7 +133,7 @@ const commandHandlers = {
 				x: 1.1,
 				y: 1.1
 			},
-			TIME_UNIT/2,
+			ctx.timeUnit/2,
 			Phaser.Easing.Quadratic.InOut,
 			true, 0, 0, true
 		)
@@ -144,11 +142,15 @@ const commandHandlers = {
 }
 
 class ImageGraphics{
-	constructor(key, {game, group, s, audio}, {x, y}){
+	constructor(key, {game, group, s, main}, {x, y}){
 		this.key = key;
 		this.s = s;
 		this.game = game;
-		this.audio = audio;
+		if(main){
+			this.audio = main.audio;
+			this.timeUnit = main.timeUnit.value;
+			main.timeUnit.onChange.add(() => this.timeUnit = main.timeUnit.value);
+		}
 		this.g = game.add.group(group);
 		this.transfer(x, y); 
 

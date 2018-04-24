@@ -4,6 +4,7 @@ function MenuItem(game, group, text, cb, style){
 	g.anchor.x = g.anchor.y = 0.5;
 	g.inputEnabled = true;
 	g.events.onInputOver.add(_ => g.scale.x = g.scale.y = 1.2);
+	g.events.onInputUp.add(_ => g.scale.x = g.scale.y = 1.2);
 	g.events.onInputOut.add(_ => g.scale.x = g.scale.y = 1);
 	g.events.onInputDown.add(_ => {
 		g.scale.x = g.scale.y = 1;

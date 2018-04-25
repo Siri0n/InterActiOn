@@ -4422,27 +4422,27 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _alpha = __webpack_require__(350);
+var _alpha = __webpack_require__(351);
 
 var _alpha2 = _interopRequireDefault(_alpha);
 
-var _omega = __webpack_require__(351);
+var _omega = __webpack_require__(352);
 
 var _omega2 = _interopRequireDefault(_omega);
 
-var _theta = __webpack_require__(352);
+var _theta = __webpack_require__(353);
 
 var _theta2 = _interopRequireDefault(_theta);
 
-var _plus = __webpack_require__(353);
+var _plus = __webpack_require__(354);
 
 var _plus2 = _interopRequireDefault(_plus);
 
-var _minus = __webpack_require__(354);
+var _minus = __webpack_require__(355);
 
 var _minus2 = _interopRequireDefault(_minus);
 
-var _basicWall = __webpack_require__(355);
+var _basicWall = __webpack_require__(356);
 
 var _basicWall2 = _interopRequireDefault(_basicWall);
 
@@ -117985,15 +117985,15 @@ var _game = __webpack_require__(344);
 
 var _game2 = _interopRequireDefault(_game);
 
-var _playerData = __webpack_require__(360);
+var _playerData = __webpack_require__(361);
 
 var _playerData2 = _interopRequireDefault(_playerData);
 
-var _levels = __webpack_require__(361);
+var _levels = __webpack_require__(362);
 
 var _levels2 = _interopRequireDefault(_levels);
 
-var _fileSaver = __webpack_require__(362);
+var _fileSaver = __webpack_require__(363);
 
 var _fileSaver2 = _interopRequireDefault(_fileSaver);
 
@@ -118004,10 +118004,6 @@ var _container2 = _interopRequireDefault(_container);
 var _menuItem = __webpack_require__(94);
 
 var _menuItem2 = _interopRequireDefault(_menuItem);
-
-var _background = __webpack_require__(365);
-
-var _background2 = _interopRequireDefault(_background);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -118060,7 +118056,6 @@ var Main = function () {
 			this.audio.soundOn = this.playerData.getBoolean("sound", true);
 			this.audio.musicOn = this.playerData.getBoolean("music", true);
 			this.settings = new Settings(this.game, this);
-			this.background = new _background2.default(this.game, this.game.stage, this.params.screen);
 			this.goToMenu();
 		}
 	}, {
@@ -118399,15 +118394,15 @@ var _preload = __webpack_require__(347);
 
 var _preload2 = _interopRequireDefault(_preload);
 
-var _levelSelect = __webpack_require__(348);
+var _levelSelect = __webpack_require__(349);
 
 var _levelSelect2 = _interopRequireDefault(_levelSelect);
 
-var _editor = __webpack_require__(349);
+var _editor = __webpack_require__(350);
 
 var _editor2 = _interopRequireDefault(_editor);
 
-var _level = __webpack_require__(358);
+var _level = __webpack_require__(359);
 
 var _level2 = _interopRequireDefault(_level);
 
@@ -118457,7 +118452,6 @@ var MenuState = function (_Phaser$State) {
 		value: function create(game) {
 			var _this2 = this;
 
-			game.stage.backgroundColor = "#3355ff";
 			var menu = new _menu2.default(game, game.world, this.main.params.menuRect, [{
 				text: this.main.data.nextLevel ? "Continue" : "Play",
 				cb: function cb() {
@@ -118544,6 +118538,12 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _background = __webpack_require__(348);
+
+var _background2 = _interopRequireDefault(_background);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -118568,15 +118568,11 @@ var PreloadState = function (_Phaser$State) {
 	}, {
 		key: "create",
 		value: function create(game) {
-			var levels = this.filenames.map(function (name) {
-				return game.cache.getJSON(name);
-			});
-			console.log("PreloadState.create");
-			this.main.loadLevels(levels);
-		}
-	}, {
-		key: "preload",
-		value: function preload(game) {
+			var _this2 = this;
+
+			var background = new _background2.default(game, game.stage, this.main.params.screen);
+			var progress = new Progress(game, game.world, this.main.params.screen);
+
 			game.load.baseURL = "resources/";
 
 			//levels
@@ -118595,7 +118591,6 @@ var PreloadState = function (_Phaser$State) {
 			game.load.spritesheet("play", "play.png", 128, 128);
 			//background
 			game.load.image("msg-bg", "msg-bg.png");
-			game.load.image("bg-star", "bg-star.png");
 			//game objects
 			game.load.spritesheet("shape", "shape.png", 128, 128);
 			game.load.spritesheet("power", "power_.png", 128, 128);
@@ -118620,6 +118615,21 @@ var PreloadState = function (_Phaser$State) {
 			game.load.audio("pusch", "sound/pusch.wav", true);
 			game.load.audio("fade", "sound/fade.wav", true);
 			game.load.audio("bump", "sound/bump.wav", true);
+
+			game.load.start();
+
+			game.load.onLoadComplete.add(function () {
+				var levels = _this2.filenames.map(function (name) {
+					return game.cache.getJSON(name);
+				});
+				_this2.main.loadLevels(levels);
+			});
+		}
+	}, {
+		key: "preload",
+		value: function preload(game) {
+			game.stage.backgroundColor = "#3355ff";
+			game.load.image("bg-star", "resources/bg-star.png");
 		}
 	}]);
 
@@ -118628,8 +118638,80 @@ var PreloadState = function (_Phaser$State) {
 
 exports.default = PreloadState;
 
+var Progress = function () {
+	function Progress(game, group, rect) {
+		_classCallCheck(this, Progress);
+
+		this.text = "Loading...";
+		this.i = 0;
+		this.di = 1;
+		this.game = game;
+		this.g = game.add.text(0, 0, this.text, {}, group);
+		this.g.anchor.x = this.g.anchor.y = 0.5;
+		this.g.alignIn(rect, Phaser.CENTER);
+		var timer = this.game.time.create();
+		timer.loop(200, this.update, this);
+		timer.start();
+	}
+
+	_createClass(Progress, [{
+		key: "update",
+		value: function update() {
+			this.g.text = this.text.substr(0, this.i) + " " + this.text.substr(this.i);
+			this.i += this.di;
+			if (this.i == 0 || this.i == this.text.length) {
+				this.di *= -1;
+			}
+		}
+	}]);
+
+	return Progress;
+}();
+
 /***/ }),
 /* 348 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Background = function Background(game, group, rect) {
+	_classCallCheck(this, Background);
+
+	this.g = game.add.group();
+	group.add(this.g, false, 0);
+	var layer1 = new BackgroundLayer(game, this.g, rect, 6, 0.5, 0.5);
+	var layer2 = new BackgroundLayer(game, this.g, rect, 5, -0.6, 0.7);
+	var layer3 = new BackgroundLayer(game, this.g, rect, 4, 0.4, -0.8);
+	this.g.alpha = 0.3;
+};
+
+exports.default = Background;
+
+
+var K = 0.4;
+
+var BackgroundLayer = function BackgroundLayer(game, group, rect, scale, dx, dy) {
+	var _this = this;
+
+	_classCallCheck(this, BackgroundLayer);
+
+	this.g = game.add.tileSprite(rect.x, rect.y, rect.width, rect.height, "bg-star", null, group);
+	this.g.tileScale.x = this.g.tileScale.y = scale;
+	this.g.update = function () {
+		_this.g.tilePosition.add(dx * K, dy * K);
+	};
+	this.g.blendMode = Phaser.blendModes.SCREEN;
+};
+
+/***/ }),
+/* 349 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -118790,7 +118872,7 @@ var LevelSelectButton = function LevelSelectButton(game, group, level, width, he
 };
 
 /***/ }),
-/* 349 */
+/* 350 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -118814,7 +118896,7 @@ var _menuItem = __webpack_require__(94);
 
 var _menuItem2 = _interopRequireDefault(_menuItem);
 
-var _upDown = __webpack_require__(357);
+var _upDown = __webpack_require__(358);
 
 var _upDown2 = _interopRequireDefault(_upDown);
 
@@ -119432,7 +119514,7 @@ var ShittyTextInput = function (_MenuItem) {
 }(_menuItem2.default);
 
 /***/ }),
-/* 350 */
+/* 351 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119492,7 +119574,7 @@ var Alpha = function (_GameObject) {
 exports.default = Alpha;
 
 /***/ }),
-/* 351 */
+/* 352 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119568,7 +119650,7 @@ Omega.floor = true;
 exports.default = Omega;
 
 /***/ }),
-/* 352 */
+/* 353 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119642,7 +119724,7 @@ Theta.floor = true;
 exports.default = Theta;
 
 /***/ }),
-/* 353 */
+/* 354 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119734,7 +119816,7 @@ var Plus = function (_GameObject) {
 exports.default = Plus;
 
 /***/ }),
-/* 354 */
+/* 355 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119826,7 +119908,7 @@ var Plus = function (_GameObject) {
 exports.default = Plus;
 
 /***/ }),
-/* 355 */
+/* 356 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119836,7 +119918,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _wall = __webpack_require__(356);
+var _wall = __webpack_require__(357);
 
 var _wall2 = _interopRequireDefault(_wall);
 
@@ -119871,7 +119953,7 @@ var BasicWall = function (_Wall) {
 exports.default = BasicWall;
 
 /***/ }),
-/* 356 */
+/* 357 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -119956,7 +120038,7 @@ var Wall = function () {
 exports.default = Wall;
 
 /***/ }),
-/* 357 */
+/* 358 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -120037,7 +120119,7 @@ function createButton(game, group, cb, ctx, size) {
 exports.default = UpDown;
 
 /***/ }),
-/* 358 */
+/* 359 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -120051,7 +120133,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _msgBox = __webpack_require__(359);
+var _msgBox = __webpack_require__(360);
 
 var _msgBox2 = _interopRequireDefault(_msgBox);
 
@@ -120558,7 +120640,7 @@ function Tile(game, group, S, _ref2) {
 exports.default = LevelState;
 
 /***/ }),
-/* 359 */
+/* 360 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -120621,7 +120703,7 @@ var MsgBox = function () {
 exports.default = MsgBox;
 
 /***/ }),
-/* 360 */
+/* 361 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -120671,7 +120753,7 @@ var PlayerData = function () {
 exports.default = PlayerData;
 
 /***/ }),
-/* 361 */
+/* 362 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -120683,7 +120765,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = ["Intro", "First Step", "Indirect", "Walls!", "Stopper", "Around", "Power up", "Minus", "Tandem", "Spiral", "Arkanoid", "South Cross", "Snake Pass", "Wings", "Order", "Choose wisely", "Theta", "Abyss"];
 
 /***/ }),
-/* 362 */
+/* 363 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/* FileSaver.js
@@ -120869,7 +120951,7 @@ var saveAs = saveAs || (function(view) {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports.saveAs = saveAs;
-} else if (("function" !== "undefined" && __webpack_require__(363) !== null) && (__webpack_require__(364) !== null)) {
+} else if (("function" !== "undefined" && __webpack_require__(364) !== null) && (__webpack_require__(365) !== null)) {
   !(__WEBPACK_AMD_DEFINE_RESULT__ = (function() {
     return saveAs;
   }).call(exports, __webpack_require__, exports, module),
@@ -120878,7 +120960,7 @@ if (typeof module !== "undefined" && module.exports) {
 
 
 /***/ }),
-/* 363 */
+/* 364 */
 /***/ (function(module, exports) {
 
 module.exports = function() {
@@ -120887,55 +120969,13 @@ module.exports = function() {
 
 
 /***/ }),
-/* 364 */
+/* 365 */
 /***/ (function(module, exports) {
 
 /* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {/* globals __webpack_amd_options__ */
 module.exports = __webpack_amd_options__;
 
 /* WEBPACK VAR INJECTION */}.call(exports, {}))
-
-/***/ }),
-/* 365 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Background = function Background(game, group, rect) {
-	_classCallCheck(this, Background);
-
-	this.g = game.add.group();
-	group.add(this.g, false, 0);
-	var layer1 = new BackgroundLayer(game, this.g, rect, 6, 0.5, 0.5);
-	var layer2 = new BackgroundLayer(game, this.g, rect, 5, -0.6, 0.7);
-	var layer3 = new BackgroundLayer(game, this.g, rect, 4, 0.4, -0.8);
-	this.g.alpha = 0.3;
-};
-
-exports.default = Background;
-
-
-var K = 0.4;
-
-var BackgroundLayer = function BackgroundLayer(game, group, rect, scale, dx, dy) {
-	var _this = this;
-
-	_classCallCheck(this, BackgroundLayer);
-
-	this.g = game.add.tileSprite(rect.x, rect.y, rect.width, rect.height, "bg-star", null, group);
-	this.g.tileScale.x = this.g.tileScale.y = scale;
-	this.g.update = function () {
-		_this.g.tilePosition.add(dx * K, dy * K);
-	};
-	this.g.blendMode = Phaser.blendModes.SCREEN;
-};
 
 /***/ })
 /******/ ]);

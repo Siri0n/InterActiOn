@@ -4,7 +4,6 @@ import levelNames from "resources/levels";
 import FileSaver from "file-saver";
 import Container from "./states/components/container";
 import MenuItem from "./states/components/menuItem";
-import Background from "./states/components/background";
 
 const SPEEDS = {
 	low: 600,
@@ -40,7 +39,6 @@ class Main{
 		this.audio.soundOn = this.playerData.getBoolean("sound", true);
 		this.audio.musicOn = this.playerData.getBoolean("music", true);
 		this.settings = new Settings(this.game, this);
-		this.background = new Background(this.game, this.game.stage, this.params.screen);
 		this.goToMenu();
 	}
 	goToMenu(){

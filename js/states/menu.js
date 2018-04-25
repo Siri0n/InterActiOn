@@ -5,7 +5,6 @@ class MenuState extends Phaser.State{
 		this.main = main;
 	}
 	create(game){
-		game.stage.backgroundColor = "#3355ff";
 		var menu = new Menu(game, game.world, this.main.params.menuRect, [
 			{
 				text: this.main.data.nextLevel ? "Continue" : "Play",

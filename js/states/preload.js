@@ -1,14 +1,14 @@
+import Background from "./components/background";
+
 class PreloadState extends Phaser.State{
 	init(main, filenames){
 		this.main = main;
 		this.filenames = filenames;
 	}
 	create(game){
-		var levels = this.filenames.map(name => game.cache.getJSON(name));
-		console.log("PreloadState.create");
-		this.main.loadLevels(levels);
-	}
-	preload(game){
+		var background = new Background(game, game.stage, this.main.params.screen);
+		var progress = new Progress(game, game.world, this.main.params.screen);
+
 		game.load.baseURL = "resources/";
 
 		//levels
@@ -25,7 +25,6 @@ class PreloadState extends Phaser.State{
 		game.load.spritesheet("play", "play.png", 128, 128);
 		//background
 		game.load.image("msg-bg", "msg-bg.png");
-		game.load.image("bg-star", "bg-star.png");
 		//game objects
 		game.load.spritesheet("shape", "shape.png", 128, 128);
 		game.load.spritesheet("power", "power_.png", 128, 128);
@@ -50,7 +49,42 @@ class PreloadState extends Phaser.State{
 		game.load.audio("pusch", "sound/pusch.wav", true);
 		game.load.audio("fade", "sound/fade.wav", true);
 		game.load.audio("bump", "sound/bump.wav", true);
+
+		game.load.start();
+
+		game.load.onLoadComplete.add(() => {
+			var levels = this.filenames.map(name => game.cache.getJSON(name));
+			this.main.loadLevels(levels);
+		});
+	}
+	preload(game){
+		game.stage.backgroundColor = "#3355ff";
+		game.load.image("bg-star", "resources/bg-star.png");
 	}
 }
 
 export default PreloadState;
+
+class Progress{
+	constructor(game, group, rect){
+		this.text = "Loading...";
+		this.i = 0;
+		this.di = 1;
+		this.game = game;
+		this.g = game.add.text(0, 0, this.text, {
+
+		}, group);
+		this.g.anchor.x = this.g.anchor.y = 0.5;
+		this.g.alignIn(rect, Phaser.CENTER);
+		var timer = this.game.time.create();
+		timer.loop(200, this.update, this);
+		timer.start();
+	}
+	update(){
+		this.g.text = this.text.substr(0, this.i) + " " + this.text.substr(this.i);
+		this.i += this.di;
+		if(this.i == 0 || this.i == this.text.length){
+			this.di *= -1;
+		}
+	}
+}

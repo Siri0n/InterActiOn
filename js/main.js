@@ -31,6 +31,7 @@ class Main{
 	}
 	loadLevels(levels){
 		this.levels = levels;
+		levels.forEach((level, i) => level.num = i + 1);
 		var musicList = ["bgm0", "bgm1", "bgm2"];
 		this.audio = new Audio(this.game, ["pusch", "fade", "bump"], musicList);
 		var playRandom = () => this.audio.playMusic(Phaser.ArrayUtils.getRandomItem(musicList));

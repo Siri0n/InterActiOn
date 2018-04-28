@@ -10,6 +10,15 @@ class LevelState extends Phaser.State{
 		this.cancel = cancelCallback;
 	}
 	create(game){
+		var text = this.levelData.name;
+		if(this.levelData.num){
+			text = this.levelData.num + ". " + text;
+		}
+		var caption = game.add.text(0, 0, text, {}, game.world);
+		caption.alignIn(
+			this.main.params.fieldRect.clone().scale(1, 0.1), 
+			Phaser.CENTER
+		);
 		var field = new Field(
 			game, 
 			game.world, 

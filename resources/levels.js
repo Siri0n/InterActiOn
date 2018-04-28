@@ -5,5 +5,7 @@ export default [
 
 	"Spiral", "Arkanoid", "South Cross",
 	"Snake Pass", "Wings", "Order",
-	"Choose wisely", "Theta", "Abyss"
+	"Choose wisely", "Theta", "Abyss",
+
+	"Obstacle"
 ];

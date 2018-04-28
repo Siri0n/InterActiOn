@@ -118046,6 +118046,9 @@ var Main = function () {
 			var _this = this;
 
 			this.levels = levels;
+			levels.forEach(function (level, i) {
+				return level.num = i + 1;
+			});
 			var musicList = ["bgm0", "bgm1", "bgm2"];
 			this.audio = new Audio(this.game, ["pusch", "fade", "bump"], musicList);
 			var playRandom = function playRandom() {
@@ -120179,6 +120182,12 @@ var LevelState = function (_Phaser$State) {
 		value: function create(game) {
 			var _this2 = this;
 
+			var text = this.levelData.name;
+			if (this.levelData.num) {
+				text = this.levelData.num + ". " + text;
+			}
+			var caption = game.add.text(0, 0, text, {}, game.world);
+			caption.alignIn(this.main.params.fieldRect.clone().scale(1, 0.1), Phaser.CENTER);
 			var field = new Field(game, game.world, this.main.params.fieldRect, this.main, this.levelData, this.success);
 			var sidebar = new _sidebar2.default(game, game.world, [{
 				key: "undo",
@@ -120762,7 +120771,7 @@ exports.default = PlayerData;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.default = ["Intro", "First Step", "Indirect", "Walls!", "Stopper", "Around", "Power up", "Minus", "Tandem", "Spiral", "Arkanoid", "South Cross", "Snake Pass", "Wings", "Order", "Choose wisely", "Theta", "Abyss"];
+exports.default = ["Intro", "First Step", "Indirect", "Walls!", "Stopper", "Around", "Power up", "Minus", "Tandem", "Spiral", "Arkanoid", "South Cross", "Snake Pass", "Wings", "Order", "Choose wisely", "Theta", "Abyss", "Obstacle"];
 
 /***/ }),
 /* 363 */

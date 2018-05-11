@@ -12,8 +12,8 @@ function EditorWallMixin(BaseClass){
 			this.onClick = new Phaser.Signal();
 			this.g.inputEnabled = true;
 			this.g.events.onInputDown.add(() => this.onClick.dispatch());
-			var _s = this.s / this.g.scale.x;
-			this.g.hitArea = new Phaser.Rectangle(-_s/2, -_s/2, _s, _s);
+			var s = this.s / this.g.scale.x;
+			this.g.hitArea = new Phaser.Rectangle(-s/2, -s/2, s, s);
 		}
 		inputEnabled(enabled){
 			this.g.inputEnabled = enabled;
@@ -68,14 +68,21 @@ class Editor{
 		this.main = main;
 
 		data = data || {
-			name: "Level Name",
+			name: {
+				[main.locale.defaultLanguage]: "Level Name"
+			},
 			height: 4,
 			width: 4,
 			objects: []
 		}
 		var rect = new Phaser.Rectangle(game.width*3/4, 0, game.width/4, game.height/4);
 
-		var fieldName = new ShittyTextInput(game, game.world, main.params.fieldRect.clone().scale(1, 0.1), data.name);
+		var fieldName = new EditorLevelName({
+			game, 
+			rect: main.params.fieldRect.clone().scale(1, 0.1), 
+			name: data.name,
+			locale: main.locale
+		});
 
 		var field = new EditorField(
 			game, 
@@ -96,7 +103,8 @@ class Editor{
 		var params = new ParamsEditor(
 			game,
 			game.world,
-			rect.clone().offset(0, game.height/4)
+			rect.clone().offset(0, game.height/4),
+			main.locale
 		); 
 
 		function resizeField(){
@@ -401,14 +409,14 @@ class ComponentPalette{
 }
 
 class ParamsEditor{
-	constructor(game, group, rect){
+	constructor(game, group, rect, locale){
 		this.game = game;
 		this.rect = rect;
 		this.g = game.add.group(group);
 		this.tabs = {};
 		
-		this.tabs.fieldSize = new FieldSize(game, this.g, rect);
-		this.tabs.objectProps = new Props(game, this.g, rect);
+		this.tabs.fieldSize = new FieldSize(game, this.g, rect, locale);
+		this.tabs.objectProps = new Props(game, this.g, rect, locale);
 		this.showTab("fieldSize");
 	}
 	showTab(showKey){
@@ -417,7 +425,7 @@ class ParamsEditor{
 }
 
 class FieldSize{
-	constructor(game, group, rect){
+	constructor(game, group, rect, locale){
 		this.game = game;
 		this.rect = rect;
 		this.g = game.add.group(group);
@@ -438,11 +446,11 @@ class FieldSize{
 }
 
 class Props extends Container{
-	constructor(game, group, rect){
+	constructor(game, group, rect, locale){
 		super(game, group, rect, []);
 
 		this.onDelete = new Phaser.Signal();
-		this.delete = new MenuItem(game, game.world, "Delete", () => this.onDelete.dispatch());
+		this.delete = new MenuItem({game, text: "delete", locale, cb: () => this.onDelete.dispatch()});
 		this.power = new UpDown(game, this.g, {
 			min: 1,
 			max: 9,
@@ -463,19 +471,30 @@ class Props extends Container{
 	}
 }
 
-class ShittyTextInput extends MenuItem{
-	constructor(game, group, rect, text){
+class EditorLevelName extends MenuItem{
+	constructor({game, group, rect, locale, name}){
 		var onChange = new Phaser.Signal();
 		var cb = () => {
 			var newName = prompt("Enter level name");
 			if(!newName){
 				return;
 			}
-			onChange.dispatch(newName);
-			this.g.text = newName;
+			this.name[locale.current] = newName;
+			onChange.dispatch(this.name);
+			this.update();
+			this.g.alignIn(rect, Phaser.CENTER);
 		}
-		super(game, group, text, cb, {});
+		super({
+			game, 
+			group, 
+			locale,
+			cb, 
+			text: locale => this.name[locale.current] || this.name[locale.defaultLanguage],
+			update: false
+		});
+		this.name = name;
 		this.onChange = onChange;
 		this.g.alignIn(rect, Phaser.CENTER);
+		this.update();
 	}
 }

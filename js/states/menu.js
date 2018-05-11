@@ -7,22 +7,22 @@ class MenuState extends Phaser.State{
 	create(game){
 		var menu = new Menu(game, game.world, this.main.params.menuRect, [
 			{
-				text: this.main.data.nextLevel ? "Continue" : "Play",
+				text: this.main.data.nextLevel ? "continue" : "play",
 				cb: () => this.main.playAll()
 			},
 			{
-				text: "Select level",
+				text: "select_level",
 				cb: () => this.main.selectLevel()
 			},
 			{
-				text: "Settings",
+				text: "settings",
 				cb: () => this.main.settings.open()
 			},
 			{
-				text: "Level editor",
+				text: "level_editor",
 				cb: () => this.main.openEditor()
 			}
-		]);
+		], main.locale);
 	}
 }
 

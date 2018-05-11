@@ -4,6 +4,9 @@ import levelNames from "resources/levels";
 import FileSaver from "file-saver";
 import Container from "./states/components/container";
 import MenuItem from "./states/components/menuItem";
+import Locale from "./states/components/locale";
+import locales from "resources/locales";
+import Text from "./states/components/text";
 
 const SPEEDS = {
 	low: 600,
@@ -27,6 +30,7 @@ class Main{
 		this.gameSpeed = this.playerData.get("gameSpeed", "medium");
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
 		this.data = {nextLevel: 0};
+		this.locale = new Locale(locales, "eng");
 		this.game.state.start("preload", true, false, this, levelNames);
 	}
 	loadLevels(levels){
@@ -159,44 +163,88 @@ class Settings{
 		this.g = game.add.group(game.stage);
 		var rect = main.params.screen;
 		this.menu = new Container(game, this.g, main.params.menuRect, [
-			new MenuItem(game, this.g, "Resume", () => this.close()),
-			new Toggle(game, this.g, [
-				{
-					value: false,
-					text: "Sounds off"
-				},
-				{
-					value: true,
-					text: "Sounds on"
+			new MenuItem({
+				game, 
+				group: this.g,
+				locale: main.locale,
+				text: "resume", 
+				cb: () => this.close()
+			}),
+			new Toggle({
+				game, 
+				group: this.g,
+				locale: main.locale,
+				variants: [
+					{
+						value: false,
+						text: locale => locale.get("sounds") + " " + locale.get("off")
+					},
+					{
+						value: true,
+						text: locale => locale.get("sounds") + " " + locale.get("on")
+					}
+				], 
+				cb: val => main.setAudio("sound", val), 
+				index: main.audio.soundOn | 0
+			}),
+			new Toggle({
+				game, 
+				group: this.g,
+				locale: main.locale,
+				variants: [
+					{
+						value: false,
+						text: locale => locale.get("music") + " " + locale.get("off")
+					},
+					{
+						value: true,
+						text: locale => locale.get("music") + " " + locale.get("on")
+					}
+				], 
+				cb: val => main.setAudio("music", val), 
+				index: main.audio.musicOn | 0
+			}),
+			new Toggle({
+				game, 
+				group: this.g,
+				locale: main.locale,
+				variants: [
+					{
+						value: "low",
+						text: locale => locale.get("game_speed") + " " + locale.get("low")
+					},
+					{
+						value: "medium",
+						text: locale => locale.get("game_speed") + " " + locale.get("medium")
+					},
+					{
+						value: "high",
+						text: locale => locale.get("game_speed") + " " + locale.get("high")
+					}
+				], 
+				cb: val => main.gameSpeed = val, 
+				index: {value: main.gameSpeed}
+			}),
+			new Toggle({
+				game, 
+				group: this.g,
+				locale: main.locale,
+				variants: Object.keys(main.locale.languages).map(key => ({
+					value: key,
+					text: "lang"
+				})), 
+				cb: val => main.locale.switch(val), 
+				index: {value: main.locale.current}
+			}),
+			new MenuItem({
+				game, 
+				group: this.g,
+				locale: main.locale,
+				text: "go_to_menu", 
+				cb: () => {
+					this.close();
+					main.goToMenu();
 				}
-			], val => main.setAudio("sound", val), main.audio.soundOn|0),
-			new Toggle(game, this.g, [
-				{
-					value: false,
-					text: "Music off"
-				},
-				{
-					value: true,
-					text: "Music on"
-				}
-			], val => main.setAudio("music", val), main.audio.musicOn|0),
-			new Toggle(game, this.g, [
-				{
-					value: "low",
-					text: "Game speed: low"
-				},
-				{
-					value: "medium",
-					text: "Game speed: medium"
-				},
-				{
-					value: "high",
-					text: "Game speed: high"
-				}
-			], val => main.gameSpeed = val, {value: main.gameSpeed}),
-			new MenuItem(game, this.g, "Go to main menu", () => {
-				this.close();
-				main.goToMenu();
 			})
 		]);
 		this.g.visible = false;
@@ -212,15 +260,20 @@ class Settings{
 }
 
 class Toggle extends MenuItem{
-	constructor(game, group, variants, cb, index = 0){
+	constructor({game, group, locale, variants, cb, index = 0}){
 		if(index.value){
 			index = variants.findIndex(v => v.value == index.value);
 		}
-		super(game, group, variants[index].text, () => {
+		super({
+			game, 
+			group,
+			locale,
+			text: variants[index].text,
+			cb: () => {
 			this.index = (this.index + 1) % variants.length;
-			this.g.text = this.variants[this.index].text;
-			console.log("Index = " + this.index + ", value = " + this.variants[this.index].value);
+			this.text = this.variants[this.index].text;
 			cb(this.variants[this.index].value);
+		}
 		});
 		this.variants = variants;
 		this.index = index;

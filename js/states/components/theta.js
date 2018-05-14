@@ -17,7 +17,7 @@ class Theta extends GameObject{
 		this.field = field;
 
 		this.onClick.add(() => {
-			this.field.showMessage("This is Theta. You should not move Alpha here.");
+			this.field.showMessage("theta_help");
 		});
 	}
 	onEnter(o){

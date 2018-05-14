@@ -17,7 +17,7 @@ class Omega extends GameObject{
 		this.field = field;
 
 		this.onClick.add(() => {
-			this.field.showMessage("This is Omega. You should move Alpha here.");
+			this.field.showMessage("omega_help");
 		});
 	}
 	onEnter(o){

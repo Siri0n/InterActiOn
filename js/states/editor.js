@@ -430,15 +430,21 @@ class FieldSize{
 		this.rect = rect;
 		this.g = game.add.group(group);
 
-		this.width = new UpDown(game, this.g, {
+		this.width = new UpDown({
+			game,
+			locale,
+			group: this.g,
 			min: 1,
-			max: 10,
-			label: "Width: "
+			max: 9,
+			text: "width"
 		});
-		this.height = new UpDown(game, this.g, {
+		this.height = new UpDown({
+			game,
+			locale,
+			group: this.g,
 			min: 1,
-			max: 10,
-			label: "Height: "
+			max: 9,
+			text: "height"
 		});
 		this.g.align(1, -1, rect.width, rect.height/2, Phaser.CENTER);
 		this.g.alignIn(rect);
@@ -451,10 +457,13 @@ class Props extends Container{
 
 		this.onDelete = new Phaser.Signal();
 		this.delete = new MenuItem({game, text: "delete", locale, cb: () => this.onDelete.dispatch()});
-		this.power = new UpDown(game, this.g, {
+		this.power = new UpDown({
+			game,
+			locale,
+			group: this.g,
 			min: 1,
 			max: 9,
-			label: "Power: "
+			text: "power"
 		});
 		this.add([
 			this.delete,
@@ -490,7 +499,7 @@ class EditorLevelName extends MenuItem{
 			locale,
 			cb, 
 			text: locale => this.name[locale.current] || this.name[locale.defaultLanguage],
-			update: false
+			updateOnCreation: false
 		});
 		this.name = name;
 		this.onChange = onChange;

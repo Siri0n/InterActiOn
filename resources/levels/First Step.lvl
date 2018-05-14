@@ -1,1 +1,1 @@
-﻿{"name":"First step","height":4,"width":4,"objects":[{"type":"plus","position":{"x":1,"y":3},"power":1},{"type":"alpha","position":{"x":1,"y":2}},{"type":"plus","position":{"x":0,"y":0},"power":1},{"type":"omega","position":{"x":3,"y":0}}]}
+﻿{"name":{"eng":"First step","rus":"Первый шаг"},"height":4,"width":4,"objects":[{"type":"plus","position":{"x":1,"y":3},"power":1},{"type":"alpha","position":{"x":1,"y":2}},{"type":"plus","position":{"x":0,"y":0},"power":1},{"type":"omega","position":{"x":3,"y":0}}]}

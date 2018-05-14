@@ -1,9 +1,9 @@
 export default class Text{
-	constructor({game, group = game.world, position = {x: 0, y: 0}, style = {}, text, locale, update=true}){
+	constructor({game, group = game.world, position = {x: 0, y: 0}, style = {}, text, locale, updateOnCreation=true}){
 		this.locale = locale;
 		this.text = text;
 		this.g = game.add.text(position.x, position.y, "", style, group);
-		update && this.update();
+		updateOnCreation && this.text && this.update();
 		this.locale.onSwitch.add(() => this.update());
 	}
 	set text(text){

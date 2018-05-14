@@ -5,6 +5,9 @@ export default class Locale{
 		this.current = defaultLanguage;
 		this.onSwitch = new Phaser.Signal();
 	}
+	static autoDetect(){
+		return "eng";
+	}
 	switch(lang){
 		if(!this.languages[lang]){
 			lang = this.defaultLanguage;
@@ -15,6 +18,6 @@ export default class Locale{
 		}
 	}
 	get(key){
-		return this.languages[this.current][key];
+		return this.languages[this.current][key] || "ERROR: INVALID KEY";
 	}
 }

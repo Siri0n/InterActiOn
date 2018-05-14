@@ -1,4 +1,5 @@
 import Sidebar from "./components/sidebar";
+import LevelName from "./components/levelName";
 
 class LevelSelectState extends Phaser.State{
 	init(main, levels){
@@ -35,12 +36,6 @@ class LevelSelectState extends Phaser.State{
 		);
 		window.sidebar = sidebar;
 	}
-/*	preload(game){
-		game.load.image("msg-bg", "resources/msg-bg.png");
-		game.load.spritesheet("up", "resources/arrow-up.png", 128, 128);
-		game.load.spritesheet("down", "resources/arrow-down.png", 128, 128);
-		game.load.spritesheet("menu", "resources/menu-button.png", 128, 128);
-	}*/
 }
 
 export default LevelSelectState;
@@ -48,7 +43,6 @@ export default LevelSelectState;
 class LevelSelect{
 	constructor(game, group, rect, levels, cb){
 		this.rect = rect;
-		//game.world.bounds.width = game.world.bounds.height = 10000;
 		game.camera.bounds = null;
 
 		var supergroup = game.add.group(group);
@@ -106,7 +100,7 @@ class LevelSelectButton{
 	constructor(game, group, level, width, height, i, cb){
 		this.g = game.add.group(group);
 		this.bg = game.add.tileSprite(0, 0, width, height, "msg-bg", null, this.g);
-		this.t = game.add.text(0, 0, (i + 1) + ". " + level.name, {fontSize: 15}, this.g);
+		this.t = game.add.text(0, 0, (i + 1) + ". " + level.name, {fontSize: 15}, this.g); // продолжить тут
 		this.t.wordWrap = true;
 		this.t.wordWrapWidth = width * 0.9;
 		this.t.alignIn(this.bg, Phaser.CENTER);

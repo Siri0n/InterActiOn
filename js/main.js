@@ -4,7 +4,7 @@ import levelNames from "resources/levels";
 import FileSaver from "file-saver";
 import Container from "./states/components/container";
 import MenuItem from "./states/components/menuItem";
-import Locale from "./states/components/locale";
+import Locale from "./locale";
 import locales from "resources/locales";
 import Text from "./states/components/text";
 
@@ -31,6 +31,13 @@ class Main{
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
 		this.data = {nextLevel: 0};
 		this.locale = new Locale(locales, "eng");
+		this.locale.onSwitch.add(lang => this.playerData.set("locale", lang));
+		this.locale.switch(
+			this.playerData.get(
+				"locale",
+				Locale.autoDetect()
+			)
+		);
 		this.game.state.start("preload", true, false, this, levelNames);
 	}
 	loadLevels(levels){
@@ -85,7 +92,7 @@ class Main{
 	saveLevel(data){
 		var str = JSON.stringify(data);
 		var blob = new Blob([str], {type: "text/plain;charset=utf-8"});
-		FileSaver.saveAs(blob, (data.name || "level") + ".lvl");
+		FileSaver.saveAs(blob, (data.name[this.locale.defaultLanguage] || "level") + ".lvl");
 	}
 	setAudio(type, value){
 		if(type == "sound"){
@@ -270,10 +277,10 @@ class Toggle extends MenuItem{
 			locale,
 			text: variants[index].text,
 			cb: () => {
-			this.index = (this.index + 1) % variants.length;
-			this.text = this.variants[this.index].text;
-			cb(this.variants[this.index].value);
-		}
+				this.index = (this.index + 1) % variants.length;
+				this.text = this.variants[this.index].text;
+				cb(this.variants[this.index].value);
+			}
 		});
 		this.variants = variants;
 		this.index = index;

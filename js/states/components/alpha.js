@@ -15,7 +15,7 @@ class Alpha extends GameObject{
 		this.field = field;
 
 		this.onClick.add(() => {
-			this.field.showMessage("This is Alpha. You should move it to Omega, but clicking on it won't help you.");
+			this.field.showMessage("alpha_help");
 		});
 	}
 }

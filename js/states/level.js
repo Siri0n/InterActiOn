@@ -1,5 +1,6 @@
 import MsgBox from "./components/msgBox";
 import Sidebar from "./components/sidebar";
+import LevelName from "./components/levelName";
 import objectConstructors from "./components/objectConstructors";
 
 class LevelState extends Phaser.State{
@@ -10,15 +11,14 @@ class LevelState extends Phaser.State{
 		this.cancel = cancelCallback;
 	}
 	create(game){
-		var text = this.levelData.name;
-		if(this.levelData.num){
-			text = this.levelData.num + ". " + text;
-		}
-		var caption = game.add.text(0, 0, text, {}, game.world);
-		caption.alignIn(
-			this.main.params.fieldRect.clone().scale(1, 0.1), 
-			Phaser.CENTER
-		);
+		var caption = new LevelName({
+			game,
+			rect: this.main.params.fieldRect.clone().scale(1, 0.1),
+			locale: this.main.locale,
+			name: this.levelData.name,
+			num: this.levelData.num,
+		})
+
 		var field = new Field(
 			game, 
 			game.world, 
@@ -134,7 +134,8 @@ class Field{
 				rect.y + rect.height/4,
 				rect.width/2,
 				rect.height/2
-			)
+			),
+			main.locale
 		);		
 	}
 
@@ -325,7 +326,7 @@ class Field{
 		this.removedObjects.forEach(o => o.destroy());
 		this.removedObjects = [];
 		if(this.checkWinCondition()){
-			await this.showMessage("You win!");
+			await this.showMessage("you_win");
 			this.cb();
 		}
 		var newData = this.getLevelData();

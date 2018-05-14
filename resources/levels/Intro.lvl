@@ -1,1 +1,1 @@
-﻿{"name":"Intro","height":1,"width":5,"objects":[{"type":"plus","position":{"x":0,"y":0},"power":1},{"type":"alpha","position":{"x":1,"y":0}},{"type":"omega","position":{"x":4,"y":0}}]}
+﻿{"name":{"eng":"Intro","rus":"Вступление"},"height":1,"width":5,"objects":[{"type":"plus","position":{"x":0,"y":0},"power":1},{"type":"alpha","position":{"x":1,"y":0}},{"type":"omega","position":{"x":4,"y":0}}]}

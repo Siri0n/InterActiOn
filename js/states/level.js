@@ -16,7 +16,7 @@ class LevelState extends Phaser.State{
 			rect: this.main.params.fieldRect.clone().scale(1, 0.1),
 			locale: this.main.locale,
 			name: this.levelData.name,
-			num: this.levelData.num,
+			num: this.levelData.num + ". ",
 		})
 
 		var field = new Field(

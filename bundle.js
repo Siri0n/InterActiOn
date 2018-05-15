@@ -4531,6 +4531,7 @@ var LevelName = function (_Text) {
 		var game = _ref.game,
 		    group = _ref.group,
 		    rect = _ref.rect,
+		    style = _ref.style,
 		    locale = _ref.locale,
 		    name = _ref.name,
 		    _ref$num = _ref.num,
@@ -4541,14 +4542,15 @@ var LevelName = function (_Text) {
 		var _this = _possibleConstructorReturn(this, (LevelName.__proto__ || Object.getPrototypeOf(LevelName)).call(this, {
 			game: game,
 			group: group,
+			style: style,
 			locale: locale,
 			text: function text(locale) {
-				return (num && num + ". ") + (name[locale.current] || name[locale.defaultLanguage]);
+				return num + (name[locale.current] || name[locale.defaultLanguage]);
 			}
 		}));
 
 		_this.name = name;
-		_this.g.alignIn(rect, Phaser.CENTER);
+		rect && _this.g.alignIn(rect, Phaser.CENTER);
 		return _this;
 	}
 
@@ -119003,7 +119005,7 @@ var LevelSelectState = function (_Phaser$State) {
 
 			var levelSelect = new LevelSelect(game, game.world, this.main.params.fieldRect, this.levels, function (i) {
 				return _this2.main.playOne(i);
-			});
+			}, this.main.locale);
 			var sidebar = new _sidebar2.default(game, game.world, [{
 				key: "up",
 				cb: function cb() {
@@ -119030,7 +119032,7 @@ var LevelSelectState = function (_Phaser$State) {
 exports.default = LevelSelectState;
 
 var LevelSelect = function () {
-	function LevelSelect(game, group, rect, levels, cb) {
+	function LevelSelect(game, group, rect, levels, cb, locale) {
 		_classCallCheck(this, LevelSelect);
 
 		this.rect = rect;
@@ -119044,7 +119046,7 @@ var LevelSelect = function () {
 			if (!groups[groupIndex]) {
 				groups[groupIndex] = game.add.group(supergroup);
 			}
-			var button = new LevelSelectButton(game, groups[groupIndex], data, 100, 100, i, cb);
+			var button = new LevelSelectButton(game, groups[groupIndex], data, 100, 100, i, cb, locale);
 			buttons.push(button);
 		});
 		groups.forEach(function (g) {
@@ -119094,15 +119096,26 @@ var LevelSelect = function () {
 	return LevelSelect;
 }();
 
-var LevelSelectButton = function LevelSelectButton(game, group, level, width, height, i, cb) {
+var LevelSelectButton = function LevelSelectButton(game, group, level, width, height, i, cb, locale) {
 	_classCallCheck(this, LevelSelectButton);
 
 	this.g = game.add.group(group);
 	this.bg = game.add.tileSprite(0, 0, width, height, "msg-bg", null, this.g);
-	this.t = game.add.text(0, 0, i + 1 + ". " + level.name, { fontSize: 15 }, this.g); // продолжить тут
-	this.t.wordWrap = true;
-	this.t.wordWrapWidth = width * 0.9;
-	this.t.alignIn(this.bg, Phaser.CENTER);
+	this.t = new _levelName2.default({
+		game: game,
+		group: this.g,
+		locale: locale,
+		style: {
+			fontSize: 15,
+			align: "center"
+		},
+		name: level.name,
+		num: level.num + ".\n"
+	});
+	//game.add.text(0, 0, (i + 1) + ". " + level.name, {fontSize: 15}, this.g); // продолжить тут
+	this.t.g.wordWrap = true;
+	this.t.g.wordWrapWidth = width * 0.9;
+	this.t.g.alignIn(this.bg, Phaser.CENTER);
 	this.bg.inputEnabled = true;
 	this.bg.events.onInputDown.add(function () {
 		return cb(i);
@@ -120494,7 +120507,7 @@ var LevelState = function (_Phaser$State) {
 				rect: this.main.params.fieldRect.clone().scale(1, 0.1),
 				locale: this.main.locale,
 				name: this.levelData.name,
-				num: this.levelData.num
+				num: this.levelData.num + ". "
 			});
 
 			var field = new Field(game, game.world, this.main.params.fieldRect, this.main, this.levelData, this.success);

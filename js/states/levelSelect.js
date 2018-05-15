@@ -12,7 +12,8 @@ class LevelSelectState extends Phaser.State{
 			game.world, 
 			this.main.params.fieldRect, 
 			this.levels, 
-			i => this.main.playOne(i)
+			i => this.main.playOne(i),
+			this.main.locale
 		);
 		var sidebar = new Sidebar(
 			game,
@@ -41,7 +42,7 @@ class LevelSelectState extends Phaser.State{
 export default LevelSelectState;
 
 class LevelSelect{
-	constructor(game, group, rect, levels, cb){
+	constructor(game, group, rect, levels, cb, locale){
 		this.rect = rect;
 		game.camera.bounds = null;
 
@@ -53,7 +54,7 @@ class LevelSelect{
 			if(!groups[groupIndex]){
 				groups[groupIndex] = game.add.group(supergroup);
 			}
-			var button = new LevelSelectButton(game, groups[groupIndex], data, 100, 100, i, cb);
+			var button = new LevelSelectButton(game, groups[groupIndex], data, 100, 100, i, cb, locale);
 			buttons.push(button);
 		})
 		groups.forEach(g => g.align(3, 3, 150, 150, Phaser.CENTER));
@@ -97,13 +98,24 @@ class LevelSelect{
 }
 
 class LevelSelectButton{
-	constructor(game, group, level, width, height, i, cb){
+	constructor(game, group, level, width, height, i, cb, locale){
 		this.g = game.add.group(group);
 		this.bg = game.add.tileSprite(0, 0, width, height, "msg-bg", null, this.g);
-		this.t = game.add.text(0, 0, (i + 1) + ". " + level.name, {fontSize: 15}, this.g); // продолжить тут
-		this.t.wordWrap = true;
-		this.t.wordWrapWidth = width * 0.9;
-		this.t.alignIn(this.bg, Phaser.CENTER);
+		this.t = new LevelName({
+			game,
+			group: this.g,
+			locale,
+			style: {
+				fontSize: 15,
+				align: "center"
+			},
+			name: level.name,
+			num: level.num + ".\n"
+		}); 
+		//game.add.text(0, 0, (i + 1) + ". " + level.name, {fontSize: 15}, this.g); // продолжить тут
+		this.t.g.wordWrap = true;
+		this.t.g.wordWrapWidth = width * 0.9;
+		this.t.g.alignIn(this.bg, Phaser.CENTER);
 		this.bg.inputEnabled = true;
 		this.bg.events.onInputDown.add(() => cb(i));
 	}

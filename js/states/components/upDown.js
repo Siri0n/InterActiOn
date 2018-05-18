@@ -1,54 +1,65 @@
 import Text from "./text";
+import Container from "./container";
 
-class UpDown{
-	constructor({game, group = game.world, text, locale, min, max, size = 32, value = min}){
+class UpDown extends Container{
+	constructor({game, group = game.world, parent, text, locale, min, max, size = 32, value = min}){
+		super(game, group, null, [], parent);
 		this.onChange = new Phaser.Signal();
 		this.min = min;
 		this.max = max;
 		this.value = value;
-		this.g = game.add.group(group);
 		var style = {
 			fontSize: size*2/3
 		}
 		this.label = new Text({
 			game, 
-			group: this.g,
+			parent: this,
 			text,
 			locale,
 			style 
 		});
+
 		this.valueText = game.add.text(0, 0, this.value, style, this.g);
 		this.decButton = createButton(game, this.g, this.dec, this, 32);
 		this.decButton.angle = 180;
 		this.incButton = createButton(game, this.g, this.inc, this, 32);
-		this.update();
-		locale.onSwitch.add(() => this.align());
+		this.add([
+			this.label,
+			this.decButton,
+			this.valueText,
+			this.incButton
+		]);
+		this.updateValue();
 	}
 	inc(){
 		if(this.value < this.max){
 			this.value++;
-			this.update();
+			this.updateValue();
 		}
 	}
 	dec(){
 		if(this.value > this.min){
 			this.value--;
-			this.update();
+			this.updateValue();
 		}
 	}
 	set(value){
 		this.value = Phaser.Math.clamp(value, this.min, this.max);
-		this.update();
+		this.updateValue();
 	}
-	align(){
+	alignChildren(){
+		if(!this.label){
+			return;
+		}
 		this.decButton.alignTo(this.label.g, Phaser.RIGHT_CENTER);
 		this.valueText.alignTo(this.decButton, Phaser.RIGHT_CENTER);
 		this.incButton.alignTo(this.valueText, Phaser.RIGHT_CENTER);		
 	}
-	update(){
+	alignSelf(){}
+	updateValue(){
 		this.valueText.text = this.value;
-		this.align();
 		this.onChange.dispatch(this.value);
+		this.shouldUpdate = true;
 	}
 }
 

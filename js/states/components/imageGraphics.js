@@ -114,6 +114,16 @@ const commandHandlers = {
 	},
 	fade(resolve, command, ctx){
 		ctx.audio.playSound(command.sound);
+
+		var emitter = game.add.emitter();
+		emitter.makeParticles("particle");
+		emitter.emitX = ctx.image.world.x;
+		emitter.emitY = ctx.image.world.y;
+		emitter.setAlpha(0, 0.5, ctx.timeUnit/2, Phaser.Easing.Quadratic.In, true);
+		emitter.setAngle(0, 360, 32000 / ctx.timeUnit, 48000 / ctx.timeUnit);
+		emitter.gravity.x = emitter.gravity.y = 0;
+		emitter.explode(ctx.timeUnit, 100);
+
 		ctx.game.add.tween(ctx.g)
 		.to(
 			{
@@ -123,7 +133,10 @@ const commandHandlers = {
 			Phaser.Easing.Linear.None,
 			true
 		)
-		.onComplete.addOnce(resolve);
+		.onComplete.addOnce(() => {
+			emitter.destroy();
+			resolve();
+		});
 	},
 	activate(resolve, command, ctx){
 		ctx.audio.playSound(command.sound);

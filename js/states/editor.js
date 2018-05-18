@@ -421,14 +421,13 @@ class ParamsEditor{
 	}
 	showTab(showKey){
 		Object.keys(this.tabs).forEach(key => this.tabs[key].g.visible = (key == showKey));
+		this.tabs[showKey].shouldUpdate = true;
 	}
 }
 
-class FieldSize{
+class FieldSize extends Container{
 	constructor(game, group, rect, locale){
-		this.game = game;
-		this.rect = rect;
-		this.g = game.add.group(group);
+		super(game, group, rect, []);
 
 		this.width = new UpDown({
 			game,
@@ -446,8 +445,10 @@ class FieldSize{
 			max: 9,
 			text: "height"
 		});
-		this.g.align(1, -1, rect.width, rect.height/2, Phaser.CENTER);
-		this.g.alignIn(rect);
+		this.add([
+			this.width,
+			this.height
+		]);
 	}
 }
 

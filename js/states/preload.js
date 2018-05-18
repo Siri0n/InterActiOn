@@ -37,6 +37,7 @@ class PreloadState extends Phaser.State{
 		game.load.image("wall", "wall.png");
 
 		game.load.image("tile", "tile.png");
+		game.load.image("particle", "particle.png");
 		//editor
 		game.load.spritesheet("editor-tile", "editor-tile.png", 128, 128);
 		game.load.spritesheet("editor-tile-wall", "editor-tile-wall.png", 128, 128);

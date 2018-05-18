@@ -16,7 +16,7 @@ class LevelState extends Phaser.State{
 			rect: this.main.params.fieldRect.clone().scale(1, 0.1),
 			locale: this.main.locale,
 			name: this.levelData.name,
-			num: this.levelData.num + ". ",
+			num: this.levelData.num && (this.levelData.num + ". "),
 		})
 
 		var field = new Field(
@@ -128,7 +128,13 @@ class Field{
 
 		this.msgBox = new MsgBox(
 			game, 
-			parentGroup, 
+			parentGroup,
+			new Phaser.Rectangle(
+				rect.x + rect.width/6,
+				rect.y + rect.height/6,
+				2*rect.width/3,
+				2*rect.height/3
+			),
 			new Phaser.Rectangle(
 				rect.x + rect.width/4,
 				rect.y + rect.height/4,

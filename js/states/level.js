@@ -3,6 +3,8 @@ import Sidebar from "./components/sidebar";
 import LevelName from "./components/levelName";
 import objectConstructors from "./components/objectConstructors";
 
+const {Point, Rectangle} = Phaser;
+
 class LevelState extends Phaser.State{
 	init(main, levelData, successCallback, cancelCallback){
 		this.main = main;
@@ -11,33 +13,31 @@ class LevelState extends Phaser.State{
 		this.cancel = cancelCallback;
 	}
 	create(game){
-		var caption = new LevelName({
+		this.caption = new LevelName({
 			game,
-			rect: this.main.params.fieldRect.clone().scale(1, 0.1),
 			locale: this.main.locale,
 			name: this.levelData.name,
 			num: this.levelData.num && (this.levelData.num + ". "),
-		})
+		});
 
-		var field = new Field(
+		this.field = new Field({
 			game, 
-			game.world, 
-			this.main.params.fieldRect,
-			this.main,
-			this.levelData, 
-			this.success
-		);
-		var sidebar = new Sidebar(
-			game, 
-			game.world, 
-			[
+			group: game.world, 
+			main: this.main,
+			data: this.levelData, 
+			cb: this.success
+		});
+
+		this.sidebar = new Sidebar({
+			game,  
+			buttons: [
 				{
 					key: "undo",
-					cb: () => field.undo()
+					cb: () => this.field.undo()
 				},
 				{
 					key: "restart",
-					cb: () => field.restart()
+					cb: () => this.field.restart()
 				},
 				{
 					key: "cancel",
@@ -48,14 +48,43 @@ class LevelState extends Phaser.State{
 					cb: () => this.main.settings.open()
 				}
 			],
-			this.main.params.sidebarButtonSize,
-			this.main.params.sidebarOuterSize
-		);
+			buttonSize: this.main.params.sidebarButtonSize,
+			outerSize: this.main.params.sidebarOuterSize
+		});
+		this.main.screen.onChange.add(rect => this._resize(rect));
+	}
+	_resize(rect){
+		var childRects = {};
+		if(rect.width > rect.height){
+			let x = new Point(
+				rect.right - this.main.params.sidebarOuterSize,
+				rect.y + this.main.params.captionHeight
+			);
+			childRects.sidebar = Rectangle.aabb([x, rect.topRight, rect.bottomRight]);
+			childRects.caption = Rectangle.aabb([x, rect.topLeft]);
+			childRects.field = Rectangle.aabb([x, rect.bottomLeft]);
+		}else{
+			childRects.caption = new Rectangle(rect.x, rect.y, rect.width, this.main.params.captionHeight);
+			childRects.sidebar = new Rectangle(
+				rect.x, 
+				rect.bottom - this.main.params.sidebarOuterSize, 
+				rect.width, 
+				this.main.params.sidebarOuterSize
+			);
+			childRects.field = Rectangle.aabb([
+				childRects.caption.bottomRight, 
+				childRects.sidebar.topLeft
+			]);
+		}
+		console.log(rect, childRects);
+		this.caption.g.alignIn(childRects.caption, Phaser.CENTER);
+		this.sidebar.resize(childRects.sidebar);
+		this.field.resize(childRects.field);
 	}
 }
 
-const s = 48;
-const Point = Phaser.Point;
+
+
 
 function deepEqual(o1, o2){ //plain objects only
 	if(typeof o1 != typeof o2){
@@ -80,8 +109,10 @@ function deepEqual(o1, o2){ //plain objects only
 	}
 }
 
+const s = 48;
+
 class Field{
-	constructor(game, parentGroup, rect, main, data, cb){
+	constructor({game, group = game.world, rect, main, data, cb}){
 		this.game = game;
 		this.data = data;
 		this.s = s;
@@ -96,9 +127,8 @@ class Field{
 		this.VOID = [{body: "solid"}];
 		this.DIRECTIONS = [this.UP, this.RIGHT, this.DOWN, this.LEFT];
 
-		parentGroup = parentGroup || game.world;
 		rect = rect || game.world.bounds;
-		this.g = game.add.group(parentGroup);
+		this.g = game.add.group(group);
 		this.g.position.x = rect.x;
 		this.g.position.y = rect.y;
 
@@ -113,7 +143,6 @@ class Field{
 				this.tiles.push(new Tile(game, this.tilesGroup, s, {x, y}));
 			}
 		}
-		this.g.alignIn(rect, Phaser.CENTER);
 
 		this.floorGroup = game.add.group(this.g);
 		this.wallGroup = game.add.group(this.g);
@@ -128,7 +157,7 @@ class Field{
 
 		this.msgBox = new MsgBox(
 			game, 
-			parentGroup,
+			group,
 			new Phaser.Rectangle(
 				rect.x + rect.width/6,
 				rect.y + rect.height/6,
@@ -145,6 +174,9 @@ class Field{
 		);		
 	}
 
+	resize(rect){
+		this.g.alignIn(rect, Phaser.CENTER);
+	}
 	populate(data){
 		data.objects.forEach(objectData => {
 			var O = objectConstructors[objectData.type];

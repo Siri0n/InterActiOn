@@ -5,7 +5,7 @@ import LevelEditor from "./states/editor";
 import Level from "./states/level";
 
 export default function(){
-	var game = new Phaser.Game(800, 600, Phaser.AUTO, "");
+	var game = new Phaser.Game(800, 600, Phaser.AUTO, "main");
 	game.state.add("preload", Preload);
 	game.state.add("menu", Menu);
 	game.state.add("levelSelect", LevelSelect);

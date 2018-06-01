@@ -1,4 +1,4 @@
-class GraphicsContainer{
+class Container{
 	constructor(game, group, rect, children, parent){
 		this.g = game.add.group(group);
 		this.game = game;
@@ -29,7 +29,7 @@ class GraphicsContainer{
 		this.parent = parent;
 		this.parent.g.add(this.g);
 	}
-	setRect(rect){
+	resize(rect){
 		this.rect = rect;
 		this.alignChildren();
 		this.alignSelf();
@@ -50,4 +50,4 @@ class GraphicsContainer{
 	}
 }
 
-export default GraphicsContainer;
+export default Container;

@@ -1584,11 +1584,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var GraphicsContainer = function () {
-	function GraphicsContainer(game, group, rect, children, parent) {
+var Container = function () {
+	function Container(game, group, rect, children, parent) {
 		var _this = this;
 
-		_classCallCheck(this, GraphicsContainer);
+		_classCallCheck(this, Container);
 
 		this.g = game.add.group(group);
 		this.game = game;
@@ -1603,7 +1603,7 @@ var GraphicsContainer = function () {
 		};
 	}
 
-	_createClass(GraphicsContainer, [{
+	_createClass(Container, [{
 		key: "add",
 		value: function add(children) {
 			var _this2 = this;
@@ -1627,8 +1627,8 @@ var GraphicsContainer = function () {
 			this.parent.g.add(this.g);
 		}
 	}, {
-		key: "setRect",
-		value: function setRect(rect) {
+		key: "resize",
+		value: function resize(rect) {
 			this.rect = rect;
 			this.alignChildren();
 			this.alignSelf();
@@ -1655,10 +1655,10 @@ var GraphicsContainer = function () {
 		}
 	}]);
 
-	return GraphicsContainer;
+	return Container;
 }();
 
-exports.default = GraphicsContainer;
+exports.default = Container;
 
 /***/ }),
 /* 52 */
@@ -3474,6 +3474,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
 var _container = __webpack_require__(51);
 
 var _container2 = _interopRequireDefault(_container);
@@ -3489,34 +3491,48 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var Sidebar = function (_Container) {
 	_inherits(Sidebar, _Container);
 
-	function Sidebar(game, group, items, size, outerSize) {
+	function Sidebar(_ref) {
+		var game = _ref.game,
+		    group = _ref.group,
+		    rect = _ref.rect,
+		    buttons = _ref.buttons,
+		    buttonSize = _ref.buttonSize,
+		    outerSize = _ref.outerSize;
+
 		_classCallCheck(this, Sidebar);
 
-		var children = items.map(function (data) {
+		var children = buttons.map(function (data) {
 			var button = game.add.button(0, 0, data.key, data.cb, null, 1, 0, 2, 1);
-			button.height = button.width = size;
+			button.height = button.width = buttonSize;
 			return button;
 		});
 
-		var _this = _possibleConstructorReturn(this, (Sidebar.__proto__ || Object.getPrototypeOf(Sidebar)).call(this, game, group, game.camera.fixedView, []));
+		var _this = _possibleConstructorReturn(this, (Sidebar.__proto__ || Object.getPrototypeOf(Sidebar)).call(this, game, group, rect, []));
 
-		_this.g.fixedToCamera = true;
-		_this.size = size;
+		_this.buttonSize = buttonSize;
 		_this.outerSize = outerSize;
 		_this.add(children);
+		rect && _this.resize(rect);
 		return _this;
 	}
 
 	_createClass(Sidebar, [{
+		key: "resize",
+		value: function resize(rect) {
+			this.vertical = rect.width < rect.height;
+			console.log(rect, this.vertical);
+			_get(Sidebar.prototype.__proto__ || Object.getPrototypeOf(Sidebar.prototype), "resize", this).call(this, rect);
+		}
+	}, {
 		key: "alignChildren",
 		value: function alignChildren() {
-			this.g.align(1, -1, this.outerSize, this.outerSize);
+			var n = this.vertical ? 1 : -1;
+			this.g.align(n, -n, this.outerSize, this.outerSize);
 		}
 	}, {
 		key: "alignSelf",
 		value: function alignSelf() {
-			this.g.cameraOffset.x = this.game.camera.width - this.outerSize;
-			this.g.cameraOffset.y = this.game.camera.height - this.outerSize * this.children.length;
+			this.rect && this.g.alignIn(this.rect, this.vertical ? Phaser.BOTTOM_RIGHT : Phaser.CENTER);
 		}
 	}]);
 
@@ -118207,6 +118223,10 @@ var _text = __webpack_require__(50);
 
 var _text2 = _interopRequireDefault(_text);
 
+var _observable = __webpack_require__(372);
+
+var _observable2 = _interopRequireDefault(_observable);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -118228,16 +118248,20 @@ var Main = function () {
 		_classCallCheck(this, Main);
 
 		this.game = (0, _game2.default)();
+		//for debug
 		window.game = this.game;
 		window.main = this;
+
+		this.screen = new _observable2.default(new Phaser.Rectangle(0, 0, this.game.width, this.game.height), true);
 		this.params = {
 			sidebarButtonSize: 60,
 			sidebarOuterSize: 64,
-			screen: new Phaser.Rectangle(0, 0, this.game.width, this.game.height),
+			captionHeight: 64,
 			menuRect: new Phaser.Rectangle(0, this.game.height / 4, this.game.width, this.game.height / 2)
 		};
+
 		this.playerData = new _playerData2.default();
-		this.timeUnit = new ObservableParam();
+		this.timeUnit = new _observable2.default();
 		this.gameSpeed = this.playerData.get("gameSpeed", "medium");
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
 		this.data = { nextLevel: 0 };
@@ -118250,24 +118274,39 @@ var Main = function () {
 	}
 
 	_createClass(Main, [{
-		key: "loadLevels",
-		value: function loadLevels(levels) {
+		key: "onGameStart",
+		value: function onGameStart() {
 			var _this2 = this;
 
+			this.game.scale.setMinMax(800, 600);
+			this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+			this.game.scale.onSizeChange.add(function () {
+				return _this2.screen.value = new Phaser.Rectangle(0, 0, _this2.game.width, _this2.game.height);
+			});
+		}
+	}, {
+		key: "loadLevels",
+		value: function loadLevels(levels) {
+			var _this3 = this;
+
+			//levels
 			this.levels = levels;
 			levels.forEach(function (level, i) {
 				return level.num = i + 1;
 			});
+
 			var musicList = ["bgm0", "bgm1", "bgm2"];
-			this.audio = new Audio(this.game, ["pusch", "fade", "bump"], musicList);
+			this.audio = new AudioManager(this.game, ["pusch", "fade", "bump"], musicList);
 			var playRandom = function playRandom() {
-				return _this2.audio.playMusic(Phaser.ArrayUtils.getRandomItem(musicList));
+				return _this3.audio.playMusic(Phaser.ArrayUtils.getRandomItem(musicList));
 			};
 			this.audio.onMusicEnd.add(playRandom);
 			playRandom();
 			this.audio.soundOn = this.playerData.getBoolean("sound", true);
 			this.audio.musicOn = this.playerData.getBoolean("music", true);
+
 			this.settings = new Settings(this.game, this);
+
 			this.goToMenu();
 		}
 	}, {
@@ -118288,36 +118327,36 @@ var Main = function () {
 	}, {
 		key: "playCustom",
 		value: function playCustom(data) {
-			var _this3 = this;
+			var _this4 = this;
 
 			var cb = function cb() {
-				return _this3.openEditor(data);
+				return _this4.openEditor(data);
 			};
 			this.game.state.start("level", true, false, this, data, cb, cb);
 		}
 	}, {
 		key: "playOne",
 		value: function playOne(i) {
-			var _this4 = this;
+			var _this5 = this;
 
 			this.play(i, function () {
-				return _this4.goToMenu();
+				return _this5.goToMenu();
 			}, function () {
-				return _this4.selectLevel();
+				return _this5.selectLevel();
 			});
 		}
 	}, {
 		key: "playAll",
 		value: function playAll() {
-			var _this5 = this;
+			var _this6 = this;
 
 			var i = this.data.nextLevel;
 			if (this.levels[i]) {
 				this.play(i, function () {
-					_this5.data.nextLevel = i + 1;
-					_this5.playAll();
+					_this6.data.nextLevel = i + 1;
+					_this6.playAll();
 				}, function () {
-					return _this5.selectLevel();
+					return _this6.selectLevel();
 				});
 			} else {
 				this.data.nextLevel = 0;
@@ -118366,29 +118405,29 @@ var Main = function () {
 	return Main;
 }();
 
-var Audio = function () {
-	function Audio(game, soundNames, musicNames) {
-		var _this6 = this;
+var AudioManager = function () {
+	function AudioManager(game, soundNames, musicNames) {
+		var _this7 = this;
 
-		_classCallCheck(this, Audio);
+		_classCallCheck(this, AudioManager);
 
 		this.sound = {};
 		this.music = {};
 		this.game = game;
 		soundNames.forEach(function (name) {
 			var sound = game.add.audio(name);
-			_this6.sound[name] = sound;
+			_this7.sound[name] = sound;
 		});
 		musicNames.forEach(function (name) {
 			var music = game.add.audio(name, 0.25);
-			_this6.music[name] = music;
+			_this7.music[name] = music;
 		});
 		this.currentMusic = null;
 		this._soundOn = this._musicOn = true;
 		this.onMusicEnd = new Phaser.Signal();
 	}
 
-	_createClass(Audio, [{
+	_createClass(AudioManager, [{
 		key: "playSound",
 		value: function playSound(name) {
 			this.sound[name] && this.sound[name].play();
@@ -118396,7 +118435,7 @@ var Audio = function () {
 	}, {
 		key: "playMusic",
 		value: function playMusic(name) {
-			var _this7 = this;
+			var _this8 = this;
 
 			if (this.currentMusic && this.currentMusic.isPlaying) {
 				this.currentMusic.stop();
@@ -118406,7 +118445,7 @@ var Audio = function () {
 				this.currentMusic = newMusic;
 				newMusic.play();
 				newMusic.onStop.addOnce(function () {
-					return _this7.onMusicEnd.dispatch();
+					return _this8.onMusicEnd.dispatch();
 				});
 			}
 		}
@@ -118458,25 +118497,24 @@ var Audio = function () {
 		}
 	}]);
 
-	return Audio;
+	return AudioManager;
 }();
 
 var Settings = function () {
 	function Settings(game, main) {
-		var _this8 = this;
+		var _this9 = this;
 
 		_classCallCheck(this, Settings);
 
 		this.game = game;
 		this.g = game.add.group(game.stage);
-		var rect = main.params.screen;
-		this.menu = new _container2.default(game, this.g, main.params.menuRect, [new _menuItem2.default({
+		this.menu = new _container2.default(game, this.g, null, [new _menuItem2.default({
 			game: game,
 			group: this.g,
 			locale: main.locale,
 			text: "resume",
 			cb: function cb() {
-				return _this8.close();
+				return _this9.close();
 			}
 		}), new Toggle({
 			game: game,
@@ -118560,11 +118598,14 @@ var Settings = function () {
 			locale: main.locale,
 			text: "go_to_menu",
 			cb: function cb() {
-				_this8.close();
+				_this9.close();
 				main.goToMenu();
 			}
 		})]);
 		this.g.visible = false;
+		main.screen.onChange.add(function (rect) {
+			return _this9.resize(rect);
+		});
 	}
 
 	_createClass(Settings, [{
@@ -118578,6 +118619,12 @@ var Settings = function () {
 		value: function close() {
 			this.g.visible = false;
 			this.game.world.visible = true;
+		}
+	}, {
+		key: "resize",
+		value: function resize(rect) {
+			var menuRect = rect.clone().inflate(-rect.width / 4, -rect.height / 4);
+			this.menu.resize(menuRect);
 		}
 	}]);
 
@@ -118604,48 +118651,25 @@ var Toggle = function (_MenuItem) {
 			});
 		}
 
-		var _this9 = _possibleConstructorReturn(this, (Toggle.__proto__ || Object.getPrototypeOf(Toggle)).call(this, {
+		var _this10 = _possibleConstructorReturn(this, (Toggle.__proto__ || Object.getPrototypeOf(Toggle)).call(this, {
 			game: game,
 			group: group,
 			locale: locale,
 			text: variants[index].text,
 			cb: function cb() {
-				_this9.index = (_this9.index + 1) % variants.length;
-				_this9.text = _this9.variants[_this9.index].text;
-				_cb(_this9.variants[_this9.index].value);
+				_this10.index = (_this10.index + 1) % variants.length;
+				_this10.text = _this10.variants[_this10.index].text;
+				_cb(_this10.variants[_this10.index].value);
 			}
 		}));
 
-		_this9.variants = variants;
-		_this9.index = index;
-		return _this9;
+		_this10.variants = variants;
+		_this10.index = index;
+		return _this10;
 	}
 
 	return Toggle;
 }(_menuItem2.default);
-
-var ObservableParam = function () {
-	function ObservableParam(value) {
-		_classCallCheck(this, ObservableParam);
-
-		this._value = value;
-		this.onChange = new Phaser.Signal();
-	}
-
-	_createClass(ObservableParam, [{
-		key: "value",
-		get: function get() {
-			return this._value;
-		},
-		set: function set(value) {
-			this._value = value;
-			this.onChange.dispatch(value);
-			return value;
-		}
-	}]);
-
-	return ObservableParam;
-}();
 
 exports.default = Main;
 
@@ -118661,7 +118685,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 exports.default = function () {
-	var game = new Phaser.Game(800, 600, Phaser.AUTO, "");
+	var game = new Phaser.Game(800, 600, Phaser.AUTO, "main");
 	game.state.add("preload", _preload2.default);
 	game.state.add("menu", _menu2.default);
 	game.state.add("levelSelect", _levelSelect2.default);
@@ -118736,7 +118760,7 @@ var MenuState = function (_Phaser$State) {
 		value: function create(game) {
 			var _this2 = this;
 
-			var menu = new _menu2.default(game, game.world, this.main.params.menuRect, [{
+			this.menu = new _menu2.default(game, game.world, this.main.params.menuRect, [{
 				text: this.main.data.nextLevel ? "continue" : "play",
 				cb: function cb() {
 					return _this2.main.playAll();
@@ -118757,6 +118781,15 @@ var MenuState = function (_Phaser$State) {
 					return _this2.main.openEditor();
 				}
 			}], main.locale);
+			this.main.screen.onChange.add(function (rect) {
+				return _this2._resize(rect);
+			});
+		}
+	}, {
+		key: "_resize",
+		value: function _resize(rect) {
+			var menuRect = rect.clone().inflate(-rect.width / 4, -rect.height / 4);
+			this.menu.resize(menuRect);
 		}
 	}]);
 
@@ -118856,8 +118889,10 @@ var PreloadState = function (_Phaser$State) {
 		value: function create(game) {
 			var _this2 = this;
 
-			var background = new _background2.default(game, game.stage, this.main.params.screen);
-			var progress = new Progress(game, game.world, this.main.params.screen);
+			this.main.onGameStart();
+
+			var background = new _background2.default(game, game.stage, this.main.screen);
+			var progress = new Progress(game, game.world, this.main.screen);
 
 			game.load.baseURL = "resources/";
 
@@ -118927,6 +118962,8 @@ exports.default = PreloadState;
 
 var Progress = function () {
 	function Progress(game, group, rect) {
+		var _this3 = this;
+
 		_classCallCheck(this, Progress);
 
 		this.text = "Loading...";
@@ -118935,7 +118972,10 @@ var Progress = function () {
 		this.game = game;
 		this.g = game.add.text(0, 0, this.text, {}, group);
 		this.g.anchor.x = this.g.anchor.y = 0.5;
-		this.g.alignIn(rect, Phaser.CENTER);
+		this.resize(rect.value);
+		rect.onChange.add(function (value) {
+			return _this3.resize(value);
+		});
 		var timer = this.game.time.create();
 		timer.loop(200, this.update, this);
 		timer.start();
@@ -118949,6 +118989,11 @@ var Progress = function () {
 			if (this.i == 0 || this.i == this.text.length) {
 				this.di *= -1;
 			}
+		}
+	}, {
+		key: "resize",
+		value: function resize(rect) {
+			this.g.alignIn(rect, Phaser.CENTER);
 		}
 	}]);
 
@@ -118965,6 +119010,8 @@ var Progress = function () {
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -118984,18 +119031,38 @@ exports.default = Background;
 
 var K = 0.4;
 
-var BackgroundLayer = function BackgroundLayer(game, group, rect, scale, dx, dy) {
-	var _this = this;
+var BackgroundLayer = function () {
+	function BackgroundLayer(game, group, rect, scale, dx, dy) {
+		var _this = this;
 
-	_classCallCheck(this, BackgroundLayer);
+		_classCallCheck(this, BackgroundLayer);
 
-	this.g = game.add.tileSprite(rect.x, rect.y, rect.width, rect.height, "bg-star", null, group);
-	this.g.tileScale.x = this.g.tileScale.y = scale;
-	this.g.update = function () {
-		_this.g.tilePosition.add(dx * K, dy * K);
-	};
-	this.g.blendMode = Phaser.blendModes.SCREEN;
-};
+		console.log(rect);
+		this.g = game.add.tileSprite(rect.value.x, rect.value.y, rect.width, rect.height, "bg-star", null, group);
+		this.g.tileScale.x = this.g.tileScale.y = scale;
+		this.g.update = function () {
+			_this.g.tilePosition.add(dx * K, dy * K);
+		};
+		this.g.blendMode = Phaser.blendModes.SCREEN;
+
+		this.rect = rect;
+		this.rect.onChange.add(function () {
+			return _this.resize();
+		});
+	}
+
+	_createClass(BackgroundLayer, [{
+		key: "resize",
+		value: function resize() {
+			this.g.x = this.rect.value.x;
+			this.g.y = this.rect.value.y;
+			this.g.width = this.rect.value.width;
+			this.g.height = this.rect.value.height;
+		}
+	}]);
+
+	return BackgroundLayer;
+}();
 
 /***/ }),
 /* 351 */
@@ -119026,6 +119093,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var _Phaser = Phaser,
+    Rectangle = _Phaser.Rectangle;
+
 var LevelSelectState = function (_Phaser$State) {
 	_inherits(LevelSelectState, _Phaser$State);
 
@@ -119046,26 +119116,55 @@ var LevelSelectState = function (_Phaser$State) {
 		value: function create(game) {
 			var _this2 = this;
 
-			var levelSelect = new LevelSelect(game, game.world, this.main.params.fieldRect, this.levels, function (i) {
-				return _this2.main.playOne(i);
-			}, this.main.locale);
-			var sidebar = new _sidebar2.default(game, game.world, [{
-				key: "up",
-				cb: function cb() {
-					return levelSelect.scrollBack();
-				}
-			}, {
-				key: "down",
-				cb: function cb() {
-					return levelSelect.scrollForward();
-				}
-			}, {
-				key: "menu",
-				cb: function cb() {
-					return _this2.main.settings.open();
-				}
-			}], this.main.params.sidebarButtonSize, this.main.params.sidebarOuterSize);
-			window.sidebar = sidebar;
+			this.levelSelect = new LevelSelect({
+				game: game,
+				rect: this.main.screen.value,
+				levels: this.levels,
+				cb: function cb(i) {
+					return _this2.main.playOne(i);
+				},
+				locale: this.main.locale
+			});
+			this.sidebar = new _sidebar2.default({
+				game: game,
+				buttons: [{
+					key: "up",
+					cb: function cb() {
+						return _this2.levelSelect.scrollBack();
+					}
+				}, {
+					key: "down",
+					cb: function cb() {
+						return _this2.levelSelect.scrollForward();
+					}
+				}, {
+					key: "menu",
+					cb: function cb() {
+						return _this2.main.settings.open();
+					}
+				}],
+				buttonSize: this.main.params.sidebarButtonSize,
+				outerSize: this.main.params.sidebarOuterSize
+			});
+			this.main.screen.onChange.add(function (rect) {
+				return _this2._resize(rect);
+			});
+		}
+	}, {
+		key: "_resize",
+		value: function _resize(rect) {
+			var mainRect, sidebarRect;
+			var s = this.main.params.sidebarOuterSize;
+			if (rect.width > rect.height) {
+				mainRect = new Rectangle(rect.x, rect.y, rect.width - s, rect.height);
+				sidebarRect = new Rectangle(mainRect.right, rect.y, s, rect.height);
+			} else {
+				mainRect = new Rectangle(rect.x, rect.y, rect.width, rect.height - s);
+				sidebarRect = new Rectangle(rect.x, mainRect.bottom, rect.width, s);
+			}
+
+			this.sidebar.resize(sidebarRect);
+			this.levelSelect.resize(mainRect);
 		}
 	}]);
 
@@ -119075,35 +119174,60 @@ var LevelSelectState = function (_Phaser$State) {
 exports.default = LevelSelectState;
 
 var LevelSelect = function () {
-	function LevelSelect(game, group, rect, levels, cb, locale) {
+	function LevelSelect(_ref) {
+		var _this3 = this;
+
+		var game = _ref.game,
+		    _ref$group = _ref.group,
+		    group = _ref$group === undefined ? game.world : _ref$group,
+		    rect = _ref.rect,
+		    levels = _ref.levels,
+		    cb = _ref.cb,
+		    locale = _ref.locale;
+
 		_classCallCheck(this, LevelSelect);
 
-		this.rect = rect;
-		game.camera.bounds = null;
-
-		var supergroup = game.add.group(group);
-		var groups = [];
-		var buttons = [];
-		levels.forEach(function (data, i) {
+		this.supergroup = game.add.group(group);
+		this.groups = [];
+		this.buttons = [];
+		levels.forEach(function (level, i) {
 			var groupIndex = Math.floor(i / 9);
-			if (!groups[groupIndex]) {
-				groups[groupIndex] = game.add.group(supergroup);
+			if (!_this3.groups[groupIndex]) {
+				_this3.groups[groupIndex] = game.add.group(_this3.supergroup);
 			}
-			var button = new LevelSelectButton(game, groups[groupIndex], data, 100, 100, i, cb, locale);
-			buttons.push(button);
+			var button = new LevelSelectButton({
+				game: game,
+				group: _this3.groups[groupIndex],
+				level: level,
+				i: i,
+				cb: cb,
+				locale: locale
+			});
+			_this3.buttons.push(button);
 		});
-		groups.forEach(function (g) {
-			return g.align(3, 3, 150, 150, Phaser.CENTER);
-		});
-		supergroup.align(1, -1, rect.width, rect.height, Phaser.CENTER);
 
 		this.currentScreen = 0;
 		this.maxScreen = Math.ceil(levels.length / 9) - 1;
 		this.game = game;
-		this.updateButtons();
+		rect && this.resize(rect);
 	}
 
 	_createClass(LevelSelect, [{
+		key: "resize",
+		value: function resize(rect) {
+			this.rect = rect;
+			var smallRect = rect.clone().scale(1 / 4, 1 / 4);
+			var verySmallRect = rect.clone().scale(1 / 5, 1 / 5);
+			this.buttons.forEach(function (button) {
+				return button.resize(verySmallRect);
+			});
+			this.groups.forEach(function (g) {
+				return g.align(3, 3, smallRect.width, smallRect.height, Phaser.CENTER);
+			});
+			this.supergroup.align(1, -1, rect.width, rect.height, Phaser.CENTER);
+			this.supergroup.y = -this.currentScreen * rect.height;
+		}
+	}, {
 		key: "scrollForward",
 		value: function scrollForward() {
 			if (this.currentScreen == this.maxScreen) {
@@ -119124,8 +119248,8 @@ var LevelSelect = function () {
 	}, {
 		key: "scroll",
 		value: function scroll() {
-			this.game.add.tween(this.game.camera).to({
-				y: this.currentScreen * this.rect.height
+			this.game.add.tween(this.supergroup).to({
+				y: -this.currentScreen * this.rect.height
 			}, 500, Phaser.Easing.Quadratic.InOut, true);
 			this.updateButtons();
 		}
@@ -119139,31 +119263,51 @@ var LevelSelect = function () {
 	return LevelSelect;
 }();
 
-var LevelSelectButton = function LevelSelectButton(game, group, level, width, height, i, cb, locale) {
-	_classCallCheck(this, LevelSelectButton);
+var LevelSelectButton = function () {
+	function LevelSelectButton(_ref2) {
+		var game = _ref2.game,
+		    group = _ref2.group,
+		    level = _ref2.level,
+		    rect = _ref2.rect,
+		    i = _ref2.i,
+		    cb = _ref2.cb,
+		    locale = _ref2.locale;
 
-	this.g = game.add.group(group);
-	this.bg = game.add.tileSprite(0, 0, width, height, "msg-bg", null, this.g);
-	this.t = new _levelName2.default({
-		game: game,
-		group: this.g,
-		locale: locale,
-		style: {
-			fontSize: 15,
-			align: "center"
-		},
-		name: level.name,
-		num: level.num + ".\n"
-	});
-	//game.add.text(0, 0, (i + 1) + ". " + level.name, {fontSize: 15}, this.g); // продолжить тут
-	this.t.g.wordWrap = true;
-	this.t.g.wordWrapWidth = width * 0.9;
-	this.t.g.alignIn(this.bg, Phaser.CENTER);
-	this.bg.inputEnabled = true;
-	this.bg.events.onInputDown.add(function () {
-		return cb(i);
-	});
-};
+		_classCallCheck(this, LevelSelectButton);
+
+		this.g = game.add.group(group);
+		this.bg = game.add.tileSprite(0, 0, 0, 0, "msg-bg", null, this.g);
+		this.t = new _levelName2.default({
+			game: game,
+			group: this.g,
+			locale: locale,
+			style: {
+				fontSize: 15,
+				align: "center"
+			},
+			name: level.name,
+			num: level.num + ".\n"
+		});
+		this.t.g.wordWrap = true;
+		this.bg.inputEnabled = true;
+		this.bg.events.onInputDown.add(function () {
+			return cb(i);
+		});
+		rect && this.resize(rect);
+	}
+
+	_createClass(LevelSelectButton, [{
+		key: "resize",
+		value: function resize(rect) {
+			this.bg.height = rect.height;
+			this.bg.width = rect.width;
+			this.t.g.wordWrapWidth = rect.width * 0.9;
+			this.t.g.alignIn(this.bg, Phaser.CENTER);
+		}
+	}]);
+
+	return LevelSelectButton;
+}();
 
 /***/ }),
 /* 352 */
@@ -119266,6 +119410,8 @@ var EditorState = function (_Phaser$State) {
 		key: "create",
 		value: function create(game) {
 			var self = this;
+			this.game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+			this.game.scale.setGameSize(1024, 768);
 			var editor = this.editor = new Editor(game, this.main, this.data);
 			this.fileUploadHack = function () {
 				if (editor.fileUploadHack) {
@@ -119290,6 +119436,7 @@ var EditorState = function (_Phaser$State) {
 	}, {
 		key: "shutdown",
 		value: function shutdown(game) {
+			this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
 			game.canvas.removeEventListener("click", this.fileUploadHack);
 		}
 	}]);
@@ -119347,27 +119494,33 @@ var Editor = function Editor(game, main, data) {
 		return field.selected.setPower(p);
 	});
 
-	var sidebar = new _sidebar2.default(game, game.world, [{
-		key: "play",
-		cb: function cb() {
-			return _this3.main.playCustom(field.getLevelData());
-		}
-	}, {
-		key: "save",
-		cb: function cb() {
-			return _this3.main.saveLevel(field.getLevelData());
-		}
-	}, {
-		key: "load",
-		cb: function cb() {
-			return _this3.fileUploadHack = true;
-		}
-	}, {
-		key: "menu",
-		cb: function cb() {
-			return _this3.main.settings.open();
-		}
-	}], this.main.params.sidebarButtonSize, this.main.params.sidebarOuterSize);
+	var sidebar = new _sidebar2.default({
+		game: game,
+		rect: new Phaser.Rectangle(game.width - this.main.params.sidebarOuterSize, 0, this.main.params.sidebarOuterSize, game.height),
+		buttons: [{
+			key: "play",
+			cb: function cb() {
+				return _this3.main.playCustom(field.getLevelData());
+			}
+		}, {
+			key: "save",
+			cb: function cb() {
+				return _this3.main.saveLevel(field.getLevelData());
+			}
+		}, {
+			key: "load",
+			cb: function cb() {
+				return _this3.fileUploadHack = true;
+			}
+		}, {
+			key: "menu",
+			cb: function cb() {
+				return _this3.main.settings.open();
+			}
+		}],
+		buttonSize: this.main.params.sidebarButtonSize,
+		outerSize: this.main.params.sidebarOuterSize
+	});
 
 	palette.onChange.add(function (c) {
 		return field.onPaletteChange(c);
@@ -120544,6 +120697,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var _Phaser = Phaser,
+    Point = _Phaser.Point,
+    Rectangle = _Phaser.Rectangle;
+
 var LevelState = function (_Phaser$State) {
 	_inherits(LevelState, _Phaser$State);
 
@@ -120566,42 +120723,72 @@ var LevelState = function (_Phaser$State) {
 		value: function create(game) {
 			var _this2 = this;
 
-			var caption = new _levelName2.default({
+			this.caption = new _levelName2.default({
 				game: game,
-				rect: this.main.params.fieldRect.clone().scale(1, 0.1),
 				locale: this.main.locale,
 				name: this.levelData.name,
 				num: this.levelData.num && this.levelData.num + ". "
 			});
 
-			var field = new Field(game, game.world, this.main.params.fieldRect, this.main, this.levelData, this.success);
-			var sidebar = new _sidebar2.default(game, game.world, [{
-				key: "undo",
-				cb: function cb() {
-					return field.undo();
-				}
-			}, {
-				key: "restart",
-				cb: function cb() {
-					return field.restart();
-				}
-			}, {
-				key: "cancel",
-				cb: this.cancel
-			}, {
-				key: "menu",
-				cb: function cb() {
-					return _this2.main.settings.open();
-				}
-			}], this.main.params.sidebarButtonSize, this.main.params.sidebarOuterSize);
+			this.field = new Field({
+				game: game,
+				group: game.world,
+				main: this.main,
+				data: this.levelData,
+				cb: this.success
+			});
+
+			this.sidebar = new _sidebar2.default({
+				game: game,
+				buttons: [{
+					key: "undo",
+					cb: function cb() {
+						return _this2.field.undo();
+					}
+				}, {
+					key: "restart",
+					cb: function cb() {
+						return _this2.field.restart();
+					}
+				}, {
+					key: "cancel",
+					cb: this.cancel
+				}, {
+					key: "menu",
+					cb: function cb() {
+						return _this2.main.settings.open();
+					}
+				}],
+				buttonSize: this.main.params.sidebarButtonSize,
+				outerSize: this.main.params.sidebarOuterSize
+			});
+			this.main.screen.onChange.add(function (rect) {
+				return _this2._resize(rect);
+			});
+		}
+	}, {
+		key: "_resize",
+		value: function _resize(rect) {
+			var childRects = {};
+			if (rect.width > rect.height) {
+				var x = new Point(rect.right - this.main.params.sidebarOuterSize, rect.y + this.main.params.captionHeight);
+				childRects.sidebar = Rectangle.aabb([x, rect.topRight, rect.bottomRight]);
+				childRects.caption = Rectangle.aabb([x, rect.topLeft]);
+				childRects.field = Rectangle.aabb([x, rect.bottomLeft]);
+			} else {
+				childRects.caption = new Rectangle(rect.x, rect.y, rect.width, this.main.params.captionHeight);
+				childRects.sidebar = new Rectangle(rect.x, rect.bottom - this.main.params.sidebarOuterSize, rect.width, this.main.params.sidebarOuterSize);
+				childRects.field = Rectangle.aabb([childRects.caption.bottomRight, childRects.sidebar.topLeft]);
+			}
+			console.log(rect, childRects);
+			this.caption.g.alignIn(childRects.caption, Phaser.CENTER);
+			this.sidebar.resize(childRects.sidebar);
+			this.field.resize(childRects.field);
 		}
 	}]);
 
 	return LevelState;
 }(Phaser.State);
-
-var s = 48;
-var Point = Phaser.Point;
 
 function deepEqual(o1, o2) {
 	//plain objects only
@@ -120649,8 +120836,18 @@ function deepEqual(o1, o2) {
 	}
 }
 
+var s = 48;
+
 var Field = function () {
-	function Field(game, parentGroup, rect, main, data, cb) {
+	function Field(_ref) {
+		var game = _ref.game,
+		    _ref$group = _ref.group,
+		    group = _ref$group === undefined ? game.world : _ref$group,
+		    rect = _ref.rect,
+		    main = _ref.main,
+		    data = _ref.data,
+		    cb = _ref.cb;
+
 		_classCallCheck(this, Field);
 
 		this.game = game;
@@ -120667,9 +120864,8 @@ var Field = function () {
 		this.VOID = [{ body: "solid" }];
 		this.DIRECTIONS = [this.UP, this.RIGHT, this.DOWN, this.LEFT];
 
-		parentGroup = parentGroup || game.world;
 		rect = rect || game.world.bounds;
-		this.g = game.add.group(parentGroup);
+		this.g = game.add.group(group);
 		this.g.position.x = rect.x;
 		this.g.position.y = rect.y;
 
@@ -120684,7 +120880,6 @@ var Field = function () {
 				this.tiles.push(new Tile(game, this.tilesGroup, s, { x: x, y: y }));
 			}
 		}
-		this.g.alignIn(rect, Phaser.CENTER);
 
 		this.floorGroup = game.add.group(this.g);
 		this.wallGroup = game.add.group(this.g);
@@ -120697,10 +120892,15 @@ var Field = function () {
 
 		this.history = [];
 
-		this.msgBox = new _msgBox2.default(game, parentGroup, new Phaser.Rectangle(rect.x + rect.width / 6, rect.y + rect.height / 6, 2 * rect.width / 3, 2 * rect.height / 3), new Phaser.Rectangle(rect.x + rect.width / 4, rect.y + rect.height / 4, rect.width / 2, rect.height / 2), main.locale);
+		this.msgBox = new _msgBox2.default(game, group, new Phaser.Rectangle(rect.x + rect.width / 6, rect.y + rect.height / 6, 2 * rect.width / 3, 2 * rect.height / 3), new Phaser.Rectangle(rect.x + rect.width / 4, rect.y + rect.height / 4, rect.width / 2, rect.height / 2), main.locale);
 	}
 
 	_createClass(Field, [{
+		key: "resize",
+		value: function resize(rect) {
+			this.g.alignIn(rect, Phaser.CENTER);
+		}
+	}, {
 		key: "populate",
 		value: function populate(data) {
 			var _this3 = this;
@@ -120942,7 +121142,7 @@ var Field = function () {
 	}, {
 		key: "process",
 		value: function () {
-			var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+			var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
 				var data, i, newData;
 				return regeneratorRuntime.wrap(function _callee$(_context) {
 					while (1) {
@@ -120992,7 +121192,7 @@ var Field = function () {
 			}));
 
 			function process() {
-				return _ref.apply(this, arguments);
+				return _ref2.apply(this, arguments);
 			}
 
 			return process;
@@ -121024,9 +121224,9 @@ var Field = function () {
 	return Field;
 }();
 
-function Tile(game, group, S, _ref2) {
-	var x = _ref2.x,
-	    y = _ref2.y;
+function Tile(game, group, S, _ref3) {
+	var x = _ref3.x,
+	    y = _ref3.y;
 
 	var img = game.add.image(x * S, y * S, "tile", null, group);
 	img.width = img.height = S;
@@ -121546,6 +121746,43 @@ exports.default = {
 	lang: "Язык: Русский",
 	go_to_menu: "Вернуться в меню"
 };
+
+/***/ }),
+/* 372 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Observable = function () {
+	function Observable(value, memorize) {
+		_classCallCheck(this, Observable);
+
+		this.onChange = new Phaser.Signal();
+		this.onChange.memorize = memorize;
+		this.value = value;
+	}
+
+	_createClass(Observable, [{
+		key: "value",
+		get: function get() {
+			return this._value;
+		},
+		set: function set(value) {
+			this._value = value;
+			this.onChange.dispatch(value);
+			return value;
+		}
+	}]);
+
+	return Observable;
+}();
+
+module.exports = Observable;
 
 /***/ })
 /******/ ]);

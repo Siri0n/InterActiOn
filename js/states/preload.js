@@ -6,8 +6,10 @@ class PreloadState extends Phaser.State{
 		this.filenames = filenames;
 	}
 	create(game){
-		var background = new Background(game, game.stage, this.main.params.screen);
-		var progress = new Progress(game, game.world, this.main.params.screen);
+		this.main.onGameStart();
+		
+		var background = new Background(game, game.stage, this.main.screen);
+		var progress = new Progress(game, game.world, this.main.screen);
 
 		game.load.baseURL = "resources/";
 
@@ -76,7 +78,8 @@ class Progress{
 
 		}, group);
 		this.g.anchor.x = this.g.anchor.y = 0.5;
-		this.g.alignIn(rect, Phaser.CENTER);
+		this.resize(rect.value);
+		rect.onChange.add((value) => this.resize(value));
 		var timer = this.game.time.create();
 		timer.loop(200, this.update, this);
 		timer.start();
@@ -87,5 +90,8 @@ class Progress{
 		if(this.i == 0 || this.i == this.text.length){
 			this.di *= -1;
 		}
+	}
+	resize(rect){
+		this.g.alignIn(rect, Phaser.CENTER);
 	}
 }

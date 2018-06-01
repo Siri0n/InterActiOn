@@ -31,6 +31,8 @@ class EditorState extends Phaser.State{
 	}
 	create(game){
 		var self = this;
+		this.game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+		this.game.scale.setGameSize(1024, 768);
 		var editor = this.editor = new Editor(game, this.main, this.data);
 		this.fileUploadHack = function(){
 			if(editor.fileUploadHack){
@@ -53,6 +55,7 @@ class EditorState extends Phaser.State{
 		game.canvas.addEventListener("click", this.fileUploadHack);
 	}
 	shutdown(game){
+		this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
 		game.canvas.removeEventListener("click", this.fileUploadHack);
 	}
 
@@ -120,10 +123,15 @@ class Editor{
 		params.tabs.objectProps.onDelete.add(() => field.delete(field.selected));
 		params.tabs.objectProps.power.onChange.add(p => field.selected.setPower(p));
 
-		var sidebar = new Sidebar(
-			game, 
-			game.world, 
-			[
+		var sidebar = new Sidebar({
+			game,
+			rect: new Phaser.Rectangle(
+				game.width - this.main.params.sidebarOuterSize,
+				0,
+				this.main.params.sidebarOuterSize,
+				game.height
+			),
+			buttons: [
 				{
 					key: "play",
 					cb: () => this.main.playCustom(field.getLevelData())
@@ -141,9 +149,9 @@ class Editor{
 					cb: () => this.main.settings.open()
 				}
 			],
-			this.main.params.sidebarButtonSize,
-			this.main.params.sidebarOuterSize
-		);
+			buttonSize: this.main.params.sidebarButtonSize,
+			outerSize: this.main.params.sidebarOuterSize
+		});
 
 		palette.onChange.add(c => field.onPaletteChange(c));
 
@@ -157,8 +165,6 @@ class Editor{
 		})
 
 		fieldName.onChange.add(name => field.name = name);
-
-
 	}
 }
 

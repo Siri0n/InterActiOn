@@ -7,6 +7,7 @@ import MenuItem from "./states/components/menuItem";
 import Locale from "./locale";
 import locales from "resources/locales";
 import Text from "./states/components/text";
+import Observable from "./observable";
 
 const SPEEDS = {
 	low: 600,
@@ -17,16 +18,23 @@ const SPEEDS = {
 class Main{
 	constructor(){
 		this.game = createGame();
+		//for debug
 		window.game = this.game;
-		window.main = this
+		window.main = this;
+
+		this.screen =  new Observable(
+			new Phaser.Rectangle(0, 0, this.game.width, this.game.height),
+			true
+		);
 		this.params = {
 			sidebarButtonSize: 60,
 			sidebarOuterSize: 64,
-			screen: new Phaser.Rectangle(0, 0, this.game.width, this.game.height),
+			captionHeight: 64,
 			menuRect: new Phaser.Rectangle(0, this.game.height/4, this.game.width, this.game.height/2)
 		};
+
 		this.playerData = new PlayerData();
-		this.timeUnit = new ObservableParam();
+		this.timeUnit = new Observable();
 		this.gameSpeed = this.playerData.get("gameSpeed", "medium");
 		this.params.fieldRect = new Phaser.Rectangle(0, 0, this.game.width - this.params.sidebarOuterSize, this.game.height);
 		this.data = {nextLevel: 0};
@@ -40,17 +48,31 @@ class Main{
 		);
 		this.game.state.start("preload", true, false, this, levelNames);
 	}
+	onGameStart(){
+		this.game.scale.setMinMax(800, 600);
+		this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+		this.game.scale.onSizeChange.add(() => 
+			this.screen.value = new Phaser.Rectangle(
+				0, 0, this.game.width, this.game.height
+			)
+		)
+	}
 	loadLevels(levels){
+		//levels
 		this.levels = levels;
 		levels.forEach((level, i) => level.num = i + 1);
+
+
 		var musicList = ["bgm0", "bgm1", "bgm2"];
-		this.audio = new Audio(this.game, ["pusch", "fade", "bump"], musicList);
+		this.audio = new AudioManager(this.game, ["pusch", "fade", "bump"], musicList);
 		var playRandom = () => this.audio.playMusic(Phaser.ArrayUtils.getRandomItem(musicList));
 		this.audio.onMusicEnd.add(playRandom);
 		playRandom();
 		this.audio.soundOn = this.playerData.getBoolean("sound", true);
 		this.audio.musicOn = this.playerData.getBoolean("music", true);
+		
 		this.settings = new Settings(this.game, this);
+		
 		this.goToMenu();
 	}
 	goToMenu(){
@@ -112,7 +134,7 @@ class Main{
 	}
 }
 
-class Audio{
+class AudioManager{
 	constructor(game, soundNames, musicNames){
 		this.sound = {};
 		this.music = {};
@@ -168,8 +190,7 @@ class Settings{
 	constructor(game, main){
 		this.game = game;
 		this.g = game.add.group(game.stage);
-		var rect = main.params.screen;
-		this.menu = new Container(game, this.g, main.params.menuRect, [
+		this.menu = new Container(game, this.g, null, [
 			new MenuItem({
 				game, 
 				group: this.g,
@@ -255,6 +276,7 @@ class Settings{
 			})
 		]);
 		this.g.visible = false;
+		main.screen.onChange.add(rect => this.resize(rect));
 	}
 	open(){
 		this.g.visible = true;
@@ -263,6 +285,13 @@ class Settings{
 	close(){
 		this.g.visible = false;
 		this.game.world.visible = true;
+	}
+	resize(rect){
+		var menuRect = rect.clone().inflate(
+			- rect.width / 4,
+			- rect.height / 4
+		);
+		this.menu.resize(menuRect);
 	}
 }
 
@@ -284,21 +313,6 @@ class Toggle extends MenuItem{
 		});
 		this.variants = variants;
 		this.index = index;
-	}
-}
-
-class ObservableParam{
-	constructor(value){
-		this._value = value;
-		this.onChange = new Phaser.Signal();
-	}
-	get value(){
-		return this._value;
-	}
-	set value(value){
-		this._value = value;
-		this.onChange.dispatch(value);
-		return value;
 	}
 }
 

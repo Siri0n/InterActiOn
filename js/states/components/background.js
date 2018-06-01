@@ -14,9 +14,10 @@ export default Background;
 const K = 0.4;
 class BackgroundLayer{
 	constructor(game, group, rect, scale, dx, dy){
+		console.log(rect);
 		this.g = game.add.tileSprite(
-			rect.x,
-			rect.y,
+			rect.value.x,
+			rect.value.y,
 			rect.width,
 			rect.height,
 			"bg-star",
@@ -28,5 +29,14 @@ class BackgroundLayer{
 			this.g.tilePosition.add(dx*K, dy*K);
 		}
 		this.g.blendMode = Phaser.blendModes.SCREEN;
+
+		this.rect = rect;
+		this.rect.onChange.add(() => this.resize());
+	}
+	resize(){
+		this.g.x = this.rect.value.x;
+		this.g.y = this.rect.value.y;
+		this.g.width = this.rect.value.width;
+		this.g.height = this.rect.value.height;
 	}
 }

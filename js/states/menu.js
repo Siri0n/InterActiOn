@@ -5,7 +5,7 @@ class MenuState extends Phaser.State{
 		this.main = main;
 	}
 	create(game){
-		var menu = new Menu(game, game.world, this.main.params.menuRect, [
+		this.menu = new Menu(game, game.world, this.main.params.menuRect, [
 			{
 				text: this.main.data.nextLevel ? "continue" : "play",
 				cb: () => this.main.playAll()
@@ -23,6 +23,14 @@ class MenuState extends Phaser.State{
 				cb: () => this.main.openEditor()
 			}
 		], main.locale);
+		this.main.screen.onChange.add(rect => this._resize(rect));
+	}
+	_resize(rect){
+		var menuRect = rect.clone().inflate(
+			- rect.width / 4,
+			- rect.height / 4
+		);
+		this.menu.resize(menuRect);
 	}
 }
 

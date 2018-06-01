@@ -1,24 +1,32 @@
 import Container from "./container";
 
 class Sidebar extends Container{
-	constructor(game, group, items, size, outerSize){
-		var children = items.map(data => {
+	constructor({game, group, rect, buttons, buttonSize, outerSize}){
+		var children = buttons.map(data => {
 			var button = game.add.button(0, 0, data.key, data.cb, null, 1, 0, 2, 1);
-			button.height = button.width = size;
+			button.height = button.width = buttonSize;
 			return button;
 		});
-		super(game, group, game.camera.fixedView, []);
-		this.g.fixedToCamera = true;
-		this.size = size;
+		super(game, group, rect, []);
+		this.buttonSize = buttonSize;
 		this.outerSize = outerSize;
 		this.add(children);
+		rect && this.resize(rect);
+	}
+	resize(rect){
+		this.vertical = rect.width < rect.height;
+		console.log(rect, this.vertical);
+		super.resize(rect);
 	}
 	alignChildren(){
-		this.g.align(1, -1, this.outerSize, this.outerSize);
+		var n = this.vertical ? 1 : -1;
+		this.g.align(n, -n, this.outerSize, this.outerSize);
 	}
 	alignSelf(){
-		this.g.cameraOffset.x = this.game.camera.width - this.outerSize;
-		this.g.cameraOffset.y = this.game.camera.height - this.outerSize*this.children.length;
+		this.rect && this.g.alignIn(
+			this.rect, 
+			this.vertical ? Phaser.BOTTOM_RIGHT : Phaser.CENTER
+		);
 	}
 }
 
